@@ -191,12 +191,14 @@ classdef ESN < handle
             elseif self.reservoirStateInit == 'zero'
                 Xinit = zeros(1, self.Nr);
             end
-            self.X = [Xinit; zeros(T-1, self.Nr)];
+            X = [Xinit; zeros(T-1, self.Nr)];
 
             % iterate the state, save all neuron activations in X
             for k = 2:T
-                self.X(k, :) = self.update(self.X(k-1, :), trainU(k, :), trainY(k-1, :));
+                X(k, :) = self.update(X(k-1, :), trainU(k, :), trainY(k-1, :));
             end
+            
+            self.X = X;
             fprintf('ESN iterate state over %d samples... done (%fs)\n', T, toc(time));
                         
 
@@ -211,16 +213,16 @@ classdef ESN < handle
 
             if self.regressionSolver == 'pinv'
                 P     = pinv(extX);
-                W_out = (P*self.if_out(trainY))';
+                self.W_out = (P*self.if_out(trainY))';
             elseif self.regressionSolver == 'Tikhonov'
                 Xnormal = extX'*extX + self.lambda * speye(size(extX,2));
                 b       = extX'*self.if_out(trainY);
-                W_out   = (Xnormal \ b)';
+                self.W_out   = (Xnormal \ b)';
             end
             fprintf('ESN fitting W_out... done (%fs)\n', toc(time))
             
             % get training error
-            predY = self.f_out(extX * W_out');
+            predY = self.f_out(extX * self.W_out');
             
             fprintf('ESN training error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
         end
