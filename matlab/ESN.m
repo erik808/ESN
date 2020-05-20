@@ -74,7 +74,8 @@ classdef ESN < handle
             self.Nr = Nr;
             self.Nu = Nu;
             self.Ny = Ny;
-
+            
+            self.initialize;
         end
 
         function initialize(self)
@@ -92,13 +93,14 @@ classdef ESN < handle
                 self.if_out = @(y) y;
             end
             
+            fprintf('ESN initialization done\n');
         end
 
         function createW(self)
         % Create sparse weight matrix with spectral radius rhoMax
 
             D = [];
-            fprintf('ESN avg entries/row: %d\n', self.entriesPerRow);
+            fprintf('ESN avg entries/row in W: %d\n', self.entriesPerRow);
             for i = 1:self.entriesPerRow
                 D = [D; ...
                      [(1:self.Nr)', ceil(self.Nr*rand(self.Nr,1)), ...
@@ -116,7 +118,7 @@ classdef ESN < handle
                                 'eigs did not converge on an eigenvalue');
                 throw(ME);
             end
-            fprintf('ESN largest eig: %f\n', mrho);
+            fprintf('ESN largest eigenvalue of W: %f\n', mrho);
 
             % adjust spectral radius of W
             self.W = self.W * self.rhoMax / mrho;
@@ -169,7 +171,8 @@ classdef ESN < handle
             assert(T == size(trainY,1), 'ESN:dimensionError', ...
                    'input and output training data have different number of samples');
 
-            fprintf('ESN training samples: %d\n', T);
+            fprintf('ESN iterate state over %d samples... \n', T);
+            time = tic;
 
             % This is the default scaling. Any problem-specific scaling should be
             % done by the user.
@@ -194,6 +197,8 @@ classdef ESN < handle
             for k = 2:T
                 self.X(k, :) = self.update(self.X(k-1, :), trainU(k, :), trainY(k-1, :));
             end
+            fprintf('ESN iterate state over %d samples... done (%fs)\n', T, toc(time));
+                        
 
             time = tic;
             fprintf('ESN fitting W_out...\n')
