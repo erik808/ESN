@@ -23,8 +23,6 @@ esn = ESN(Nr, Nu, Ny);
 esn.train(trainU, trainY);
 
 
-
-
 function [oldStates, newStates] = createLorenz63(dt, init, dataPoints)
 
 %  Create Lorenz '63 data.
