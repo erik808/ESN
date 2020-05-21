@@ -151,7 +151,7 @@ classdef ESN < handle
 
             elseif self.feedbackMatrixType == 'full'
                 % Create a random, flul output feedback weight matrix
-                self.W_ofb = (rand(self.Nr, self.Nu) * 2 - 1);
+                self.W_ofb = (rand(self.Nr, self.Ny) * 2 - 1);
             end
             self.W_ofb = self.ofbAmplitude * self.W_ofb;
 
