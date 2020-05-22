@@ -44,7 +44,7 @@ classdef ESN < handle
         outputActivation (1,1) string = 'identity';
 
         % output activation
-        f_out     = @(y) y;
+        f_out  = @(y) y;
 
         % inverse output activation
         if_out = @(y) y;
@@ -74,8 +74,6 @@ classdef ESN < handle
             self.Nr = Nr;
             self.Nu = Nu;
             self.Ny = Ny;
-            
-            self.initialize;
         end
 
         function initialize(self)
