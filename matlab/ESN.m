@@ -29,14 +29,10 @@ classdef ESN < handle
         % leaking rate
         alpha (1,1) double {mustBeNonnegative} = 1.0;
 
-        % control size input weight matrix
-        inAmplitude (1,1) double {mustBeNonnegative} = 1.0;
-
-        % control output feedback
-        ofbAmplitude (1,1) double {mustBeNonnegative} = 0.0;
-
         scaleU (1,:) double {mustBeNumeric} % input scaling
         scaleY (1,:) double {mustBeNumeric} % output scaling
+        
+        %# TODO: shifts
 
         defaultScaling (1,1) {mustBeNumericOrLogical} = true;
 
@@ -67,15 +63,23 @@ classdef ESN < handle
         % set the input weight matrix type: 'sparse' or 'full'
         inputMatrixType (1,1) string = 'sparse';
 
+        % control size input weight matrix
+        inAmplitude (1,1) double {mustBeNonnegative} = 1.0;
+
         % set the feedback weight matrix type: 'sparse' or 'full'
         feedbackMatrixType (1,1) string = 'sparse';
+
+        % control output feedback
+        ofbAmplitude (1,1) double {mustBeNonnegative} = 0.0;
 
         % set the method to solve the linear least squares problem to compute
         % W_out: 'Tikhonov' or 'pinv'
         regressionSolver (1,1) string = 'pinv';
-
+        
         % lambda (when using Tikhonov regularization)
         lambda (1,1) double {mustBeNonnegative} = 1.0;
+        
+        %# TODO: optional tolerance in pinv                
     end
 
     methods
