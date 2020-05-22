@@ -20,36 +20,60 @@ Nr = 300;
 
 esn = ESN(Nr, Nu, Ny);
 
+% change a few parameters
+esn.rhoMax = 1.2;
+esn.Wconstruction = 'entriesPerRow';
+esn.entriesPerRow = 8;
+esn.inputMatrixType = 'full';
+esn.feedThrough = false;
+
+esn.initialize;
+
+% training
 esn.train(trainU, trainY);
 
+assert(~esn.feedThrough)
+assert(size(esn.W_out,2) == esn.Nr);
 
-function [oldStates, newStates] = createLorenz63(dt, init, dataPoints)
+% prediction
+nPred = size(testU,1);
 
-%  Create Lorenz '63 data.
-%  dt:   timestep size
-%  init: initial value (x,y,z)
+% reservoir state initialization for prediction
+state = esn.X(end,:);
 
-    Nu = 3;
+% initialize output array
+predY = zeros(nPred, size(trainY,2));
 
-    % Lorenz '63 parameters
-    rho   = 28;
-    sigma = 10;
-    beta  = 8/3;
-
-    oldStates = zeros(dataPoints, Nu);
-    newStates = zeros(dataPoints, Nu);
-
-    oldStates(1, :) = init;
-
-    x = init(1);
-    y = init(2);
-    z = init(3);        
-    for n = 1:dataPoints
-        oldStates(n,:) = [x,y,z];
-        x = x + dt*sigma*(y - x);
-        y = y + dt*(x*(rho - z) - y);
-        z = z + dt*(x*y - beta*z);    
-        
-        newStates(n,:) = [x,y,z];
-    end
+% predict, feed results back into network
+% begin with final training output as input
+u = trainY(end,:) .* esn.scaleU;
+predY(1,:) = u;
+for k = 2:nPred
+    state = esn.update(state, u, u)';
+    u = esn.f_out(esn.W_out * state')';
+    predY(k,:) = u;
 end
+
+% unscale
+predY = predY ./ esn.scaleY;
+
+% construct time array for plotting
+time = dt*(1:size(predY,1));
+
+% plot reservoir
+figure(1)
+imagesc(esn.X')
+colormap(gray)
+colorbar
+
+% plot actual and predicted time series
+figure(2);
+plot(time, predY(:,1), 'r'); hold on;
+plot(time, testY(:,1), 'k'); hold off;
+xlim([0,10])
+legend('predicted', 'actual')
+
+figure(3);
+plot3(predY(:,1),predY(:,2),predY(:,3), 'r'); hold on;
+plot3(testY(:,1),testY(:,2),testY(:,3), 'k'); hold off;
+campos([-240,240,240]);
