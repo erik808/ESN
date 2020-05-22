@@ -14,8 +14,14 @@ classdef ESN < handle
         % spectral radius of the weight matrix W
         rhoMax (1,1) double {mustBeNonnegative} = 0.95;
 
-        % control sparsity in W, average number of entries per row
+        % method to construct W: 'entriesPerRow' or 'sparsity'
+        Wconstruction (1,1) string = 'entriesPerRow';
+        
+        % Wconstruction parameter: average number of entries per row
         entriesPerRow (1,1) {mustBeInteger} = 10;
+
+        % Wconstruction parameter: percentage of zeros
+        sparsity (1,1) double {mustBeNonnegative} = 0.95;
 
         % control noise
         noiseAmplitude (1,1) double {mustBeNonnegative} = 0.0;
@@ -40,6 +46,12 @@ classdef ESN < handle
         % reservoir state activations X and used to fit W_out
         feedThrough (1,1) {mustBeNumericOrLogical} = true;
 
+        % set the activation function f: 'tanh'
+        activation (1,1) string = 'tanh';
+
+        % activation function
+        f = @(x) tanh(x);
+
         % set the output activation: 'identity' or 'tanh'
         outputActivation (1,1) string = 'identity';
 
@@ -50,7 +62,7 @@ classdef ESN < handle
         if_out = @(y) y;
 
         % set the inital state of X: 'random' or 'zero'
-        reservoirStateInit (1,1) string = 'random';
+        reservoirStateInit (1,1) string = 'zero';
 
         % set the input weight matrix type: 'sparse' or 'full'
         inputMatrixType (1,1) string = 'sparse';
@@ -60,31 +72,36 @@ classdef ESN < handle
 
         % set the method to solve the linear least squares problem to compute
         % W_out: 'Tikhonov' or 'pinv'
-        regressionSolver (1,1) string = 'Tikhonov';
+        regressionSolver (1,1) string = 'pinv';
 
         % lambda (when using Tikhonov regularization)
         lambda (1,1) double {mustBeNonnegative} = 1.0;
-
     end
 
     methods
         function self = ESN(Nr, Nu, Ny)
         % Constructor
-
+            
             self.Nr = Nr;
             self.Nu = Nu;
             self.Ny = Ny;
+            
         end
-
+        
         function initialize(self)
         % Create W, W_in, W_ofb and set output activation function
-
+            
             self.createW;
             self.createW_in;
             self.createW_ofb;
 
+            
+            if self.activation == 'tanh'
+                self.f = @(x) tanh(x);
+            end            
+            
             if self.outputActivation == 'tanh'
-                self.f_out     = @(y) tanh(y);
+                self.f_out  = @(y) tanh(y);
                 self.if_out = @(y) atanh(y);
             elseif self.outputActivation == 'identity'
                 self.f_out = @(y) y;
@@ -97,14 +114,22 @@ classdef ESN < handle
         function createW(self)
         % Create sparse weight matrix with spectral radius rhoMax
 
-            D = [];
             fprintf('ESN avg entries/row in W: %d\n', self.entriesPerRow);
-            for i = 1:self.entriesPerRow
-                D = [D; ...
-                     [(1:self.Nr)', ceil(self.Nr*rand(self.Nr,1)), ...
-                      (rand(self.Nr,1)-0.5)] ];
+            
+            if self.Wconstruction == 'entriesPerRow'
+                D = [];
+                for i = 1:self.entriesPerRow
+                    D = [D; ...
+                         [(1:self.Nr)', ceil(self.Nr*rand(self.Nr,1)), ...
+                          (rand(self.Nr,1)-0.5)] ];
+                end
+                self.W = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nr);
+
+            elseif self.Wconstruction == 'sparsity'
+                self.W = rand(self.Nr)-0.5;
+                self.W(rand(self.Nr) < self.sparsity) = 0;
+                self.W = sparse(self.W);            
             end
-            self.W = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nr);
 
             % try to converge on a few of the largest eigenvalues of W
             opts.maxit=500;
@@ -175,17 +200,17 @@ classdef ESN < handle
             % This is the default scaling. Any problem-specific scaling should be
             % done by the user.
             if self.defaultScaling
-                self.scaleU = 1.2 * max(abs(trainU));
-                self.scaleY = 1.2 * max(abs(trainY));
+                self.scaleU = 1.0 / max(abs(trainU(:)));
+                self.scaleY = 1.0 / max(abs(trainY(:)));
             end
 
             % scale training data
-            trainU = trainU ./ self.scaleU;
-            trainY = trainY ./ self.scaleY;
+            trainU = trainU .* self.scaleU;
+            trainY = trainY .* self.scaleY;
 
             % initialize activations X
             if self.reservoirStateInit == 'random'
-                Xinit = tanh(10*randn(1, self.Nr));
+                Xinit = self.f(10*randn(1, self.Nr));
             elseif self.reservoirStateInit == 'zero'
                 Xinit = zeros(1, self.Nr);
             end
@@ -227,7 +252,7 @@ classdef ESN < handle
 
         function [act] = update(self, state, u, y)
             pre = self.W*state' + self.W_in*u' + self.W_ofb*y';
-            act = self.alpha * tanh(pre) + (1-self.alpha) * state' + ...
+            act = self.alpha * self.f(pre) + (1-self.alpha) * state' + ...
                   self.noiseAmplitude * (rand(self.Nr,1) - 0.5);
         end
 
