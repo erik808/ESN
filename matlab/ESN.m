@@ -16,7 +16,7 @@ classdef ESN < handle
 
         % method to construct W: 'entriesPerRow' or 'sparsity'
         Wconstruction (1,1) string = 'entriesPerRow';
-        
+
         % Wconstruction parameter: average number of entries per row
         entriesPerRow (1,1) {mustBeInteger} = 10;
 
@@ -81,33 +81,37 @@ classdef ESN < handle
     methods
         function self = ESN(Nr, Nu, Ny)
         % Constructor
-            
+
             self.Nr = Nr;
             self.Nu = Nu;
             self.Ny = Ny;
-            
+
         end
-        
+
         function initialize(self)
         % Create W, W_in, W_ofb and set output activation function
-            
+
             self.createW;
             self.createW_in;
             self.createW_ofb;
 
-            
+
             if self.activation == 'tanh'
                 self.f = @(x) tanh(x);
-            end            
-            
+            end
+
             if self.outputActivation == 'tanh'
                 self.f_out  = @(y) tanh(y);
                 self.if_out = @(y) atanh(y);
             elseif self.outputActivation == 'identity'
                 self.f_out = @(y) y;
                 self.if_out = @(y) y;
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid outputActivation parameter');
+                throw(ME);
             end
-            
+
             fprintf('ESN initialization done\n');
         end
 
@@ -115,7 +119,7 @@ classdef ESN < handle
         % Create sparse weight matrix with spectral radius rhoMax
 
             fprintf('ESN avg entries/row in W: %d\n', self.entriesPerRow);
-            
+
             if self.Wconstruction == 'entriesPerRow'
                 D = [];
                 for i = 1:self.entriesPerRow
@@ -128,7 +132,11 @@ classdef ESN < handle
             elseif self.Wconstruction == 'sparsity'
                 self.W = rand(self.Nr)-0.5;
                 self.W(rand(self.Nr) < self.sparsity) = 0;
-                self.W = sparse(self.W);            
+                self.W = sparse(self.W);
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid Wconstruction parameter');
+                throw(ME);
             end
 
             % try to converge on a few of the largest eigenvalues of W
@@ -159,6 +167,10 @@ classdef ESN < handle
             elseif self.inputMatrixType == 'full'
                 % Create a random, full input weight matrix
                 self.W_in = (rand(self.Nr, self.Nu) * 2 - 1);
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid inputMatrixType parameter');
+                throw(ME);
             end
             self.W_in = self.inAmplitude * self.W_in;
         end
@@ -175,6 +187,10 @@ classdef ESN < handle
             elseif self.feedbackMatrixType == 'full'
                 % Create a random, flul output feedback weight matrix
                 self.W_ofb = (rand(self.Nr, self.Ny) * 2 - 1);
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid feedbackMatrixType parameter');
+                throw(ME);                
             end
             self.W_ofb = self.ofbAmplitude * self.W_ofb;
 
@@ -213,6 +229,10 @@ classdef ESN < handle
                 Xinit = self.f(10*randn(1, self.Nr));
             elseif self.reservoirStateInit == 'zero'
                 Xinit = zeros(1, self.Nr);
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid reservoirStateInit parameter');
+                throw(ME);
             end
             X = [Xinit; zeros(T-1, self.Nr)];
 
@@ -220,10 +240,10 @@ classdef ESN < handle
             for k = 2:T
                 X(k, :) = self.update(X(k-1, :), trainU(k, :), trainY(k-1, :));
             end
-            
+
             self.X = X;
             fprintf('ESN iterate state over %d samples... done (%fs)\n', T, toc(time));
-                        
+
 
             time = tic;
             fprintf('ESN fitting W_out...\n')
@@ -241,12 +261,16 @@ classdef ESN < handle
                 Xnormal = extX'*extX + self.lambda * speye(size(extX,2));
                 b       = extX'*self.if_out(trainY);
                 self.W_out   = (Xnormal \ b)';
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid regressionSolver parameter');
+                throw(ME);
             end
             fprintf('ESN fitting W_out... done (%fs)\n', toc(time))
-            
+
             % get training error
             predY = self.f_out(extX * self.W_out');
-            
+
             fprintf('ESN training error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
         end
 
