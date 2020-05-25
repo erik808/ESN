@@ -29,12 +29,19 @@ classdef ESN < handle
         % leaking rate
         alpha (1,1) double {mustBeNonnegative} = 1.0;
 
+        shiftU (1,:) double {mustBeNumeric} % input shift
+        shiftY (1,:) double {mustBeNumeric} % output shift
+
         scaleU (1,:) double {mustBeNumeric} % input scaling
         scaleY (1,:) double {mustBeNumeric} % output scaling
 
-        %# TODO: shifts
+        % 'zeros': no shift,
+        % 'meanCentering': center each column around its mean
+        defaultShift (1,1) string = 'zeros';
 
-        defaultScaling (1,1) {mustBeNumericOrLogical} = true;
+        % 'maxAbs': using the absolute maximum of the full training data
+        % 'maxAbsCol': using a columnwise absolute maximum
+        defaultScaling (1,1) string = 'maxAbs';
 
         X (:,:) double {mustBeNumeric} % reservoir state activations
 
@@ -215,14 +222,47 @@ classdef ESN < handle
             assert(T == size(trainY,1), 'ESN:dimensionError', ...
                    'input and output training data have different number of samples');
 
-            fprintf('ESN iterate state over %d samples... \n', T);
-            time = tic;
 
-            % This is the default scaling. Any problem-specific scaling should be
-            % done by the user.
-            if self.defaultScaling
-                self.scaleU = 1.0 / max(abs(trainU(:)));
-                self.scaleY = 1.0 / max(abs(trainY(:)));
+            if (~isempty(self.shiftU)) && (~isempty(self.shiftY))
+                fprintf('ESN shift: user specified\n');
+
+            elseif self.defaultShift == 'zeros'
+                self.shiftU = zeros(1,self.Nu);
+                self.shiftY = zeros(1,self.Ny);
+                fprintf('ESN shift: zeros\n');
+
+            elseif self.defaultShift == 'meanCentering'
+                self.shiftU = mean(trainU);
+                self.shiftY = mean(trainY);
+                fprintf('ESN shift: mean centering\n');
+
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid defaultShift parameter');
+                throw(ME);
+            end
+
+            % shift training data
+            trainU = trainU - self.shiftU;
+            trainY = trainY - self.shiftY;
+
+            if (~isempty(self.scaleU)) && (~isempty(self.scaleY))
+                fprintf('ESN scaling: user specified\n');
+
+            elseif self.defaultScaling == 'maxAbs'
+                fprintf('ESN scaling: maxAbs\n');
+                self.scaleU = 1.0 ./ max(abs(trainU(:)));
+                self.scaleY = 1.0 ./ max(abs(trainY(:)));
+
+            elseif self.defaultScaling == 'maxAbsCol'
+                fprintf('ESN scaling: maxAbsCol\n');
+                self.scaleU = 1.0 ./ max(abs(trainU));
+                self.scaleY = 1.0 ./ max(abs(trainY));
+
+            else
+                ME = MException('ESN:invalidParameter', ...
+                                'invalid defaultScaling parameter');
+                throw(ME);
             end
 
             % scale training data
@@ -241,6 +281,9 @@ classdef ESN < handle
             end
             X = [Xinit; zeros(T-1, self.Nr)];
 
+            fprintf('ESN iterate state over %d samples... \n', T);
+            time = tic;
+
             % iterate the state, save all neuron activations in X
             for k = 2:T
                 X(k, :) = self.update(X(k-1, :), trainU(k, :), trainY(k-1, :));
@@ -248,7 +291,6 @@ classdef ESN < handle
 
             self.X = X;
             fprintf('ESN iterate state over %d samples... done (%fs)\n', T, toc(time));
-
 
             time = tic;
             fprintf('ESN fitting W_out...\n')
