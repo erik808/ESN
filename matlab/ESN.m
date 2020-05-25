@@ -31,7 +31,7 @@ classdef ESN < handle
 
         scaleU (1,:) double {mustBeNumeric} % input scaling
         scaleY (1,:) double {mustBeNumeric} % output scaling
-        
+
         %# TODO: shifts
 
         defaultScaling (1,1) {mustBeNumericOrLogical} = true;
@@ -75,11 +75,12 @@ classdef ESN < handle
         % set the method to solve the linear least squares problem to compute
         % W_out: 'Tikhonov' or 'pinv'
         regressionSolver (1,1) string = 'pinv';
-        
+
         % lambda (when using Tikhonov regularization)
-        lambda (1,1) double {mustBeNonnegative} = 1.0;
-        
-        %# TODO: optional tolerance in pinv                
+        lambda (1,1) double {mustBeNonnegative} = 1.0e-3;
+
+        % tolerance for the pseudo inverse
+        pinvTol (1,1) double {mustBeNonnegative} = 1.0e-4;
     end
 
     methods
@@ -194,7 +195,7 @@ classdef ESN < handle
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid feedbackMatrixType parameter');
-                throw(ME);                
+                throw(ME);
             end
             self.W_ofb = self.ofbAmplitude * self.W_ofb;
 
@@ -259,12 +260,18 @@ classdef ESN < handle
             end
 
             if self.regressionSolver == 'pinv'
-                P     = pinv(extX);
+
+                fprintf('ESN  using pseudo inverse, tol = %1.1e\n', self.pinvTol)
+                P = pinv(extX, self.pinvTol);
                 self.W_out = (P*self.if_out(trainY))';
+
             elseif self.regressionSolver == 'Tikhonov'
+
+                fprintf('ESN  using Tikhonov regularization, lambda = %1.1e\n', self.lambda)
                 Xnormal = extX'*extX + self.lambda * speye(size(extX,2));
                 b       = extX'*self.if_out(trainY);
                 self.W_out   = (Xnormal \ b)';
+
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid regressionSolver parameter');

@@ -26,6 +26,7 @@ esn.Wconstruction = 'entriesPerRow';
 esn.entriesPerRow = 8;
 esn.inputMatrixType = 'full';
 esn.feedThrough = false;
+esn.pinvTol = 1e-3;
 
 esn.initialize;
 
