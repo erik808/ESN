@@ -243,8 +243,8 @@ classdef ESN < handle
             end
 
             % shift training data
-            trainU = trainU - self.shiftU;
-            trainY = trainY - self.shiftY;
+            trainU = trainU - self.shiftU; % TODO factorize with method
+            trainY = trainY - self.shiftY; % - -
 
             if (~isempty(self.scaleU)) && (~isempty(self.scaleY))
                 fprintf('ESN scaling: user specified\n');
@@ -266,8 +266,8 @@ classdef ESN < handle
             end
 
             % scale training data
-            trainU = trainU .* self.scaleU;
-            trainY = trainY .* self.scaleY;
+            trainU = trainU .* self.scaleU; % - -
+            trainY = trainY .* self.scaleY; % - -
 
             % initialize activations X
             if self.reservoirStateInit == 'random'
@@ -331,6 +331,14 @@ classdef ESN < handle
             pre = self.W*state' + self.W_in*u' + self.W_ofb*y';
             act = self.alpha * self.f(pre) + (1-self.alpha) * state' + ...
                   self.noiseAmplitude * (rand(self.Nr,1) - 0.5);
+        end
+
+        function [out] = scaleInput(self, in)
+            out = (in - self.shiftU) .* self.scaleU;
+        end
+
+        function [out] = unscaleOutput(self, in)
+            out = (in ./ self.scaleY ) + self.shiftY;
         end
 
     end
