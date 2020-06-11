@@ -55,7 +55,7 @@ classdef ESN < handle
 
         % control feedthrough of u to y: the input state is appended to the
         % reservoir state activations X and used to fit W_out
-        feedThrough (1,1) {mustBeNumericOrLogical} = true;
+        feedThrough (1,1) {mustBeNumericOrLogical} = false;
 
         % mean center reservoir states before fitting
         centerX (1,1) {mustBeNumericOrLogical} = false;
