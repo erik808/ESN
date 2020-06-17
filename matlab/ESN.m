@@ -39,8 +39,9 @@ classdef ESN < handle
         scaleY (1,:) double {mustBeNumeric} % output scaling
 
         % 'none'        : no scaling or user defined
-        % 'minMax1'     : rescale range of features to [0,1]
-        % 'minMax2'     : rescale range of features to [-1,1]
+        % 'minMax1'     : rescale features to [0,1]
+        % 'minMax2'     : rescale features to [-1,1]
+        % 'minMaxAll'   : rescale data to [-1,1] over all features
         % 'standardize' : rescale feature range to zero mean and unit variance
         scalingType (1,1) string = 'none';
 
@@ -53,9 +54,12 @@ classdef ESN < handle
         % 'even'
         squaredStates (1,1) string = 'disabled';
 
-        % control feedthrough of u to y: the input state is appended to the
-        % reservoir state activations X and used to fit W_out
+        % control feedthrough of u to y: (part of) the input state is appended
+        % to the reservoir state activations X and used to fit W_out
         feedThrough (1,1) {mustBeNumericOrLogical} = false;
+        
+        % select a subset of the input data u to feedthrough
+        ftRange (1,:) double {mustBeNumeric};
 
         % mean center reservoir states before fitting
         centerX (1,1) {mustBeNumericOrLogical} = false;
@@ -95,10 +99,10 @@ classdef ESN < handle
 
         % set the method to solve the linear least squares problem to compute
         % W_out: 'Tikhonov' or 'pinv'
-        regressionSolver (1,1) string = 'pinv';
+        regressionSolver (1,1) string = 'Tikhonov';
 
         % lambda (when using Tikhonov regularization)
-        lambda (1,1) double {mustBeNonnegative} = 1.0e-7;
+        lambda (1,1) double {mustBeNonnegative} = 1.0e-4;
 
         % tolerance for the pseudo inverse
         pinvTol (1,1) double {mustBeNonnegative} = 1.0e-4;
@@ -157,6 +161,8 @@ classdef ESN < handle
             if self.Wconstruction == 'entriesPerRow'
                 D = [];
                 for i = 1:self.entriesPerRow
+                    % FIXME/TODO this method does not give enough variability in the
+                    % nnz per row
                     D = [D; ...
                          [(1:self.Nr)', ceil(self.Nr*rand(self.Nr,1)), ...
                           (rand(self.Nr,1)-0.5)] ];
@@ -249,7 +255,9 @@ classdef ESN < handle
 
             % Now that we have data we can setup the scaling
             self.computeScaling(trainU, trainY)
-
+            
+            fprintf('ESN training, input Nu = %d, output Ny = %d\n', self.Nu, self.Ny);
+                        
             % Apply scaling
             trainU = self.scaleInput(trainU);
             trainY = self.scaleOutput(trainY);
@@ -288,7 +296,10 @@ classdef ESN < handle
             end
 
             if self.feedThrough
-                extX = [extX, trainU];
+                if isempty(self.ftRange)
+                    self.ftRange = 1:Nu;
+                end
+                extX = [extX, trainU(:,self.ftRange)];
             end
 
             if self.centerX
@@ -351,7 +362,7 @@ classdef ESN < handle
             end
 
             if self.feedThrough
-                out = self.f_out(self.W_out * [x'; u'])';
+                out = self.f_out(self.W_out * [x'; u(self.ftRange)'])';
             else
                 out = self.f_out(self.W_out * x')';
             end
@@ -376,6 +387,13 @@ classdef ESN < handle
                 self.shiftU = min(U) + 1 ./ self.scaleU;
                 self.shiftY = min(Y) + 1 ./ self.scaleY;
                 fprintf('ESN scaling: minMax2 [-1,1]\n');
+
+            elseif self.scalingType == 'minMaxAll'
+                self.scaleU = 2.0 ./ (max(U(:)) - min(U(:)));
+                self.scaleY = 2.0 ./ (max(Y(:)) - min(Y(:)));
+                self.shiftU = min(U(:)) + 1 ./ self.scaleU;
+                self.shiftY = min(Y(:)) + 1 ./ self.scaleY;
+                fprintf('ESN scaling: minMaxAll [-1,1]\n');
 
             elseif self.scalingType == 'standardize'
                 self.scaleU = 1.0 ./ std(U);
