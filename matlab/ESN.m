@@ -117,6 +117,11 @@ classdef ESN < handle
             self.Nu = Nu;
             self.Ny = Ny;
 
+            % default scaling (none)
+            self.shiftU = 0;
+            self.shiftY = 0;
+            self.scaleU = 1;
+            self.scaleY = 1;
         end
 
         %-------------------------------------------------------
@@ -142,12 +147,6 @@ classdef ESN < handle
                                 'invalid outputActivation parameter');
                 throw(ME);
             end
-
-            % default scaling (none)
-            self.shiftU = 0;
-            self.shiftY = 0;
-            self.scaleU = 1;
-            self.scaleY = 1;
 
             fprintf('ESN initialization done\n');
         end
