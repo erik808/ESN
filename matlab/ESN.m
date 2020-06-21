@@ -296,7 +296,7 @@ classdef ESN < handle
 
             if self.feedThrough
                 if isempty(self.ftRange)
-                    self.ftRange = 1:Nu;
+                    self.ftRange = 1:self.Nu;
                 end
                 extX = [extX, trainU(:,self.ftRange)];
             end
