@@ -14,8 +14,11 @@ classdef ESN < handle
         % spectral radius of the weight matrix W
         rhoMax (1,1) double {mustBeNonnegative} = 0.95;
 
-        % method to construct W: 'entriesPerRow' or 'sparsity'
+        % method to construct W: 'entriesPerRow', 'sparsity', 'avgDegree'
         Wconstruction (1,1) string = 'entriesPerRow';
+
+        % average degree of the graph W
+        avgDegree (1,1) double = 3;
 
         % Wconstruction parameter: average number of entries per row
         entriesPerRow (1,1) {mustBeInteger} = 10;
@@ -57,9 +60,12 @@ classdef ESN < handle
         % control feedthrough of u to y: (part of) the input state is appended
         % to the reservoir state activations X and used to fit W_out
         feedThrough (1,1) {mustBeNumericOrLogical} = false;
-        
+
         % select a subset of the input data u to feedthrough
         ftRange (1,:) double {mustBeNumeric};
+
+        % feedthrough amplitude
+        ftAmp (1,1) double {mustBeNumeric} = 1;
 
         % mean center reservoir states before fitting
         centerX (1,1) {mustBeNumericOrLogical} = false;
@@ -125,6 +131,15 @@ classdef ESN < handle
         end
 
         %-------------------------------------------------------
+        function setPars(self, pars)
+        % overwrite class params with params in pars struct
+            names = fieldnames(pars);
+            for k = 1:numel(names)
+                self.(names{k}) = pars.(names{k});
+            end
+        end
+
+        %-------------------------------------------------------
         function initialize(self)
         % Create W, W_in, W_ofb and set output activation function
 
@@ -160,7 +175,7 @@ classdef ESN < handle
             if self.Wconstruction == 'entriesPerRow'
                 D = [];
                 for i = 1:self.entriesPerRow
-                    % FIXME/TODO this method does not give enough variability in the
+                    % This method does not give enough variability in the
                     % nnz per row
                     D = [D; ...
                          [(1:self.Nr)', ceil(self.Nr*rand(self.Nr,1)), ...
@@ -172,6 +187,8 @@ classdef ESN < handle
                 self.W = rand(self.Nr)-0.5;
                 self.W(rand(self.Nr) < self.sparsity) = 0;
                 self.W = sparse(self.W);
+            elseif self.Wconstruction == 'avgDegree'
+                self.W = sprand(self.Nr, self.Nr, self.avgDegree / self.Nr);
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid Wconstruction parameter');
@@ -179,7 +196,7 @@ classdef ESN < handle
             end
 
             % try to converge on a few of the largest eigenvalues of W
-            opts.maxit=500;
+            opts.maxit=1000;
             rho  = eigs(self.W, 3, 'lm', opts);
             mrho = max(abs(rho));
 
@@ -254,9 +271,9 @@ classdef ESN < handle
 
             % Now that we have data we can setup the scaling
             self.computeScaling(trainU, trainY)
-            
+
             fprintf('ESN training, input Nu = %d, output Ny = %d\n', self.Nu, self.Ny);
-                        
+
             % Apply scaling
             trainU = self.scaleInput(trainU);
             trainY = self.scaleOutput(trainY);
@@ -298,7 +315,7 @@ classdef ESN < handle
                 if isempty(self.ftRange)
                     self.ftRange = 1:self.Nu;
                 end
-                extX = [extX, trainU(:,self.ftRange)];
+                extX = [self.ftAmp*trainU(:,self.ftRange), extX];
             end
 
             if self.centerX
@@ -353,7 +370,7 @@ classdef ESN < handle
         function [out] = apply(self, state, u)
 
             x = state;
-            
+
             if self.squaredStates == 'append'
                 x = [state, state.^2];
             elseif self.squaredStates == 'even'
@@ -361,7 +378,7 @@ classdef ESN < handle
             end
 
             if self.feedThrough
-                out = self.f_out(self.W_out * [x'; u(self.ftRange)'])';
+                out = self.f_out(self.W_out * [self.ftAmp*u(self.ftRange)'; x'])';
             else
                 out = self.f_out(self.W_out * x')';
             end
