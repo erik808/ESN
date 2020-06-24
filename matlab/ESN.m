@@ -133,6 +133,7 @@ classdef ESN < handle
         %-------------------------------------------------------
         function setPars(self, pars)
         % overwrite class params with params in pars struct
+            assert(isstruct(pars));
             names = fieldnames(pars);
             for k = 1:numel(names)
                 self.(names{k}) = pars.(names{k});
@@ -221,9 +222,29 @@ classdef ESN < handle
                 D = [(1:self.Nr)', ceil(self.Nu * rand(self.Nr, 1)), (rand(self.Nr, 1) * 2 - 1)];
                 self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
 
+            elseif self.inputMatrixType == 'balancedSparse'
+                % This implementation makes sure that every input element is connected
+                % to roughly the same number of reservoir components.
+
+                arM  = floor(self.Nr/self.Nu);
+                arP  = ceil(self.Nr/self.Nu);
+                l1   = self.Nr - arM*self.Nu;
+                l2   = self.Nu - l1;
+
+                ico  = 1:self.Nr;
+
+                jco1 = (1:l1) .* ones(arP, l1);
+                jco2 = (l1+1:l1+l2) .* ones(arM, l2);
+                jco  = [jco1(:) ; jco2(:)];
+
+                co = 2*rand(self.Nr,1) - 1;
+
+                self.W_in = sparse(ico,jco,co,self.Nr,self.Nu);
+
             elseif self.inputMatrixType == 'full'
                 % Create a random, full input weight matrix
                 self.W_in = (rand(self.Nr, self.Nu) * 2 - 1);
+
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid inputMatrixType parameter');
