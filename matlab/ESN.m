@@ -222,6 +222,11 @@ classdef ESN < handle
                 D = [(1:self.Nr)', ceil(self.Nu * rand(self.Nr, 1)), (rand(self.Nr, 1) * 2 - 1)];
                 self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
 
+            elseif self.inputMatrixType == 'sparseOnes'
+                % 
+                D = [(1:self.Nr)', ceil(self.Nu * rand(self.Nr, 1)), ones(self.Nr, 1)];
+                self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
+            
             elseif self.inputMatrixType == 'balancedSparse'
                 % This implementation makes sure that every input element is connected
                 % to roughly the same number of reservoir components.
@@ -244,6 +249,10 @@ classdef ESN < handle
             elseif self.inputMatrixType == 'full'
                 % Create a random, full input weight matrix
                 self.W_in = (rand(self.Nr, self.Nu) * 2 - 1);
+            
+            elseif self.inputMatrixType == 'identity'
+                % 
+                self.W_in = speye(self.Nr, self.Nu);
 
             else
                 ME = MException('ESN:invalidParameter', ...
