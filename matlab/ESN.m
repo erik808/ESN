@@ -104,8 +104,10 @@ classdef ESN < handle
         ofbAmplitude (1,1) double {mustBeNonnegative} = 0.0;
 
         % set the method to solve the linear least squares problem to compute
-        % W_out: 'Tikhonov' or 'pinv'
-        regressionSolver (1,1) string = 'Tikhonov';
+        % W_out: 'TikhonovTSVD'
+        %        'TikhonovNormalEquations
+        %        'pinv'
+        regressionSolver (1,1) string = 'TikhonovTSVD';
 
         % lambda (when using Tikhonov regularization)
         lambda (1,1) double {mustBeNonnegative} = 1.0e-4;
@@ -223,10 +225,10 @@ classdef ESN < handle
                 self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
 
             elseif self.inputMatrixType == 'sparseOnes'
-                % 
+                %
                 D = [(1:self.Nr)', ceil(self.Nu * rand(self.Nr, 1)), ones(self.Nr, 1)];
                 self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
-            
+
             elseif self.inputMatrixType == 'balancedSparse'
                 % This implementation makes sure that every input element is connected
                 % to roughly the same number of reservoir components.
@@ -249,9 +251,9 @@ classdef ESN < handle
             elseif self.inputMatrixType == 'full'
                 % Create a random, full input weight matrix
                 self.W_in = (rand(self.Nr, self.Nu) * 2 - 1);
-            
+
             elseif self.inputMatrixType == 'identity'
-                % 
+                %
                 self.W_in = speye(self.Nr, self.Nu);
 
             else
@@ -362,14 +364,24 @@ classdef ESN < handle
                 P = pinv(extX, self.pinvTol);
                 self.W_out = (P*self.if_out(trainY))';
 
-            elseif self.regressionSolver == 'Tikhonov'
+            elseif self.regressionSolver == 'TikhonovNormalEquations'
 
                 fprintf('ESN  using Tikhonov regularization, lambda = %1.1e\n', ...
                         self.lambda)
                 fprintf('     problem size %d x %d\n', size(extX,2), size(extX,2));
                 Xnormal    = extX'*extX + self.lambda * speye(size(extX,2));
                 b          = extX'*self.if_out(trainY);
-                self.W_out = (Xnormal \ b)';
+                W_out = (Xnormal \ b)';
+                
+            elseif self.regressionSolver == 'TikhonovTSVD'
+
+                fprintf(' computing SVD\n');
+                [U,S,V] = svds(extX, 1500); %# this should be parameter #FIXME
+                s = diag(S);
+                f = s.^2 ./ (s.^2 + self.lambda);
+                fprintf('  smallest filter coefficient: %1.3e\n', f(end));
+                invReg  = sparse(diag(1./ (s.^2 + self.lambda)));                
+                self.W_out = (V*(invReg*(S*(U'*trainY))))';
 
             else
                 ME = MException('ESN:invalidParameter', ...
