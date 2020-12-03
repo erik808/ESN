@@ -368,19 +368,42 @@ classdef ESN < handle
 
                 fprintf('ESN  using Tikhonov regularization, lambda = %1.1e\n', ...
                         self.lambda)
-                fprintf('     problem size %d x %d\n', size(extX,2), size(extX,2));
+                fprintf(' solving normal equations: %d x %d\n', size(extX,2), size(extX,2));
                 Xnormal    = extX'*extX + self.lambda * speye(size(extX,2));
                 b          = extX'*self.if_out(trainY);
                 W_out = (Xnormal \ b)';
-                
+
             elseif self.regressionSolver == 'TikhonovTSVD'
 
+                fprintf('ESN using TSVD and Tikhonov regularization, lambda = %1.1e\n', ...
+                        self.lambda)
                 fprintf(' computing SVD\n');
-                [U,S,V] = svds(extX, 1500); %# this should be parameter #FIXME
+                fprintf(' problem size: %d x %d\n', size(extX,1), size(extX,2));
+                [U,S,V] = svd(extX, 'econ');
+
+                %# this should be parameter #FIXME
+                %[U,S,V,flag] = svds(extX, 1500, 'largest', ...
+                %                     'Tolerance', 1e-6, ...
+                %                     'MaxIterations', 5, ...
+                %                     'Display', true, ...
+                %                     'FailureTreatment','drop');
+                % fprintf('  svd flag  %d \n', flag);
+
                 s = diag(S);
                 f = s.^2 ./ (s.^2 + self.lambda);
+
+                % filter cutoff
+                fcutoff = 0.01;
+                fcutoff_ind = find(f > fcutoff, 1, 'last');
+                V = V(:,1:fcutoff_ind);
+                U = U(:,1:fcutoff_ind);
+                S = sparse(S(1:fcutoff_ind,1:fcutoff_ind));
+                s = diag(full(S));
+                f = s.^2 ./ (s.^2 + self.lambda);
+                fprintf('  filter cutoff %1.3e at index %d\n', fcutoff, fcutoff_ind);
                 fprintf('  smallest filter coefficient: %1.3e\n', f(end));
-                invReg  = sparse(diag(1./ (s.^2 + self.lambda)));                
+
+                invReg  = sparse(diag(1./ (s.^2 + self.lambda)));
                 self.W_out = (V*(invReg*(S*(U'*trainY))))';
 
             else
