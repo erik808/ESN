@@ -371,7 +371,7 @@ classdef ESN < handle
                 fprintf(' solving normal equations: %d x %d\n', size(extX,2), size(extX,2));
                 Xnormal    = extX'*extX + self.lambda * speye(size(extX,2));
                 b          = extX'*self.if_out(trainY);
-                W_out = (Xnormal \ b)';
+                self.W_out = (Xnormal \ b)';
 
             elseif self.regressionSolver == 'TikhonovTSVD'
 
@@ -381,7 +381,7 @@ classdef ESN < handle
                 fprintf(' problem size: %d x %d\n', size(extX,1), size(extX,2));
                 [U,S,V] = svd(extX, 'econ');
 
-                %# this should be parameter #FIXME
+                %# 1500 should be a parameter #FIXME
                 %[U,S,V,flag] = svds(extX, 1500, 'largest', ...
                 %                     'Tolerance', 1e-6, ...
                 %                     'MaxIterations', 5, ...
