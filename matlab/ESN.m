@@ -289,7 +289,6 @@ classdef ESN < handle
         %-------------------------------------------------------
         function train(self, trainU, trainY)
         % Train the ESN with training data trainU and trainY
-
             assert(size(trainU,2) == self.Nu, 'ESN:dimensionError', ...
                    'input training data has incorrect dimension Nu');
 
@@ -488,6 +487,18 @@ classdef ESN < handle
                                 'invalid scalingType parameter');
                 throw(ME);
             end
+           
+            % detect constant datapoints, 
+            idinfU = find(isinf(self.scaleU));
+            idinfY = find(isinf(self.scaleY));
+            if ~isempty(idinfU) || ~isempty(idinfY)
+                fprintf(' constant data points found...\n  these remain unscaled\n')
+            end
+            self.scaleU(idinfU) = 1.0;
+            self.scaleY(idinfY) = 1.0;
+            self.shiftU(idinfU) = 0.0;
+            self.shiftY(idinfY) = 0.0;
+            
         end
 
         %-------------------------------------------------------
