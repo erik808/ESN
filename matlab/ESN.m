@@ -66,6 +66,9 @@ classdef ESN < handle
 
         % feedthrough amplitude
         ftAmp (1,1) double {mustBeNumeric} = 1;
+        
+        % reservoir amplitude
+        resAmp (1,1) double {mustBeNumeric} = 1;
 
         % mean center reservoir states before fitting
         centerX (1,1) {mustBeNumericOrLogical} = false;
@@ -346,7 +349,7 @@ classdef ESN < handle
                 if isempty(self.ftRange)
                     self.ftRange = 1:self.Nu;
                 end
-                extX = [self.ftAmp*trainU(:,self.ftRange), extX];
+                extX = [self.ftAmp*trainU(:,self.ftRange), self.resAmp*extX];
             end
 
             if self.centerX
@@ -442,7 +445,7 @@ classdef ESN < handle
             end
 
             if self.feedThrough
-                out = self.f_out(self.W_out * [self.ftAmp*u(self.ftRange)'; x'])';
+                out = self.f_out(self.W_out * [self.ftAmp*u(self.ftRange)'; self.resAmp*x'])';
             else
                 out = self.f_out(self.W_out * x')';
             end
