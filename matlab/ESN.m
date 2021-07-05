@@ -20,10 +20,10 @@ classdef ESN < handle
         % average degree of the graph W
         avgDegree (1,1) double = 3;
 
-        % Wconstruction parameter: average number of entries per row
+        % Wconstruction, entriesPerRow option: avg number of entries per row
         entriesPerRow (1,1) {mustBeInteger} = 10;
 
-        % Wconstruction parameter: percentage of zeros
+        % Wconstruction, sparsity option: percentage of zeros
         sparsity (1,1) double {mustBeNonnegative} = 0.95;
 
         % control noise
@@ -66,7 +66,7 @@ classdef ESN < handle
 
         % feedthrough amplitude
         ftAmp (1,1) double {mustBeNumeric} = 1;
-        
+
         % reservoir amplitude
         resAmp (1,1) double {mustBeNumeric} = 1;
 
@@ -490,8 +490,8 @@ classdef ESN < handle
                                 'invalid scalingType parameter');
                 throw(ME);
             end
-           
-            % detect constant datapoints, 
+
+            % detect constant datapoints,
             idinfU = find(isinf(self.scaleU));
             idinfY = find(isinf(self.scaleY));
             if ~isempty(idinfU) || ~isempty(idinfY)
@@ -501,7 +501,7 @@ classdef ESN < handle
             self.scaleY(idinfY) = 1.0;
             self.shiftU(idinfU) = 0.0;
             self.shiftY(idinfY) = 0.0;
-            
+
         end
 
         %-------------------------------------------------------
