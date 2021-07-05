@@ -117,6 +117,12 @@ classdef ESN < handle
 
         % tolerance for the pseudo inverse
         pinvTol (1,1) double {mustBeNonnegative} = 1.0e-4;
+
+        % For use with TikhonovTSVD. If > 1 we perform a blockwise wavelet
+        % projection with blocksize <waveletBlockSize> on the time
+        % domain and reduce with a factor <waveletReduction>.
+        waveletReduction (1,1) double = 1;
+        waveletBlockSize (1,1) double = 1;
     end
 
     methods
@@ -380,9 +386,31 @@ classdef ESN < handle
                 fprintf('ESN using TSVD and Tikhonov regularization, lambda = %1.1e\n', ...
                         self.lambda)
                 fprintf(' computing SVD\n');
-                fprintf(' problem size: %d x %d\n', size(extX,1), size(extX,2));
 
-                [U,S,V] = svd(extX, 'econ');
+                T = size(extX, 1);
+                H = speye(T,T);
+
+                if (self.waveletReduction > 1) && (self.waveletBlockSize > 1)
+                    % create wavelet block
+                    W = self.haarmat(self.waveletBlockSize);
+
+                    % reduce wavelet block
+                    block_red = round(self.waveletBlockSize / self.waveletReduction);
+                    W = W(1:block_red,:);
+
+                    % repeating the block
+                    Nblocks = floor(T / self.waveletBlockSize);
+                    H = kron(speye(Nblocks), W);
+
+                    % padding the wavelet block
+                    Th = Nblocks * self.waveletBlockSize;
+                    rem = T - Th;
+                    Tr = size(H,1);
+                    H = [sparse(zeros(Tr, rem)), H]';
+                end
+
+                fprintf(' problem size: %d x %d\n', size(H,2), size(extX,2));
+                [U,S,V] = svd(H'*extX, 'econ');
 
                 %# 1500 should be a parameter #FIXME
                 %[U,S,V,flag] = svds(extX, 1500, 'largest', ...
@@ -407,8 +435,8 @@ classdef ESN < handle
                 fprintf('  smallest filter coefficient: %1.3e\n', f(end));
 
                 invReg  = sparse(diag(1./ (s.^2 + self.lambda)));
-                self.W_out = (V*(invReg*(S*(U'*trainY))))';
-
+                self.W_out = (V*(invReg*(S*(U'*(H'*trainY)))))';
+                
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid regressionSolver parameter');
@@ -524,7 +552,7 @@ classdef ESN < handle
         function [out] = unscaleOutput(self, in)
             out = (in ./ self.scaleY ) + self.shiftY;
         end
-        
+
         function [W] = haarmat(self, p)
         % builds a single orthogonal Haar wavelet block of size p x p
 
