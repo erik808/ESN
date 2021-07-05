@@ -381,6 +381,7 @@ classdef ESN < handle
                         self.lambda)
                 fprintf(' computing SVD\n');
                 fprintf(' problem size: %d x %d\n', size(extX,1), size(extX,2));
+
                 [U,S,V] = svd(extX, 'econ');
 
                 %# 1500 should be a parameter #FIXME
@@ -522,6 +523,26 @@ classdef ESN < handle
         %-------------------------------------------------------
         function [out] = unscaleOutput(self, in)
             out = (in ./ self.scaleY ) + self.shiftY;
+        end
+        
+        function [W] = haarmat(self, p)
+        % builds a single orthogonal Haar wavelet block of size p x p
+
+            if p == 1
+                W = 1;
+                return
+            end
+
+            assert( round(log2(p)) == log2(p) , ...
+                    'wavelet block size should be a power of 2');
+
+            W   = 1/sqrt(2)*[1 1; 1 -1];
+            dim = 2;
+            while dim < p
+                W = 1/sqrt(2)*[kron(W,[1 1]); kron(eye(dim),[1 -1])];
+                dim = size(W,1);
+            end
+            W = sparse(W);
         end
 
     end
