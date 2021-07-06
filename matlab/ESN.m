@@ -123,6 +123,10 @@ classdef ESN < handle
         % domain and reduce with a factor <waveletReduction>.
         waveletReduction (1,1) double = 1;
         waveletBlockSize (1,1) double = 1;
+
+        % Array that store the damping coefficients computed after a
+        % TikhonovTSVD solve
+        TikhonovDamping (1,:) double = 0;
     end
 
     methods
@@ -422,6 +426,7 @@ classdef ESN < handle
 
                 s = diag(S);
                 f = s.^2 ./ (s.^2 + self.lambda);
+                self.TikhonovDamping = f;
 
                 % filter cutoff
                 fcutoff = 0.01;
@@ -436,7 +441,7 @@ classdef ESN < handle
 
                 invReg  = sparse(diag(1./ (s.^2 + self.lambda)));
                 self.W_out = (V*(invReg*(S*(U'*(H'*trainY)))))';
-                
+
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid regressionSolver parameter');
