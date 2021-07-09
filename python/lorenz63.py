@@ -72,7 +72,7 @@ def main():
     esn.feedThrough = False
     esn.pinvTol = 1e-3
     esn.alpha = 1.0
-    esn.regressionSolver = 'pinv'
+    esn.regressionSolver = 'TikhonovTSVD'
 
     esn.initialize()
 

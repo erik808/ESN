@@ -369,7 +369,7 @@ class ESN:
                 H = sparse.bmat(sparse.csc_matrix(Tr, rem), H).T
 
             print(' problem size: %d x %d' % (H.shape[1], extX.shape[1]))
-            U, s, V = scipy.linalg.svd(H.T @ extX)
+            U, s, Vh = scipy.linalg.svd(H.T @ extX, False)
 
             # # 1500 should be a parameter #FIXME
             # [U,S,V,flag] = svds(extX, 1500, 'largest', ...
@@ -382,22 +382,21 @@ class ESN:
             f = s * s / (s * s + self.tikhonov_lambda)
             self.TikhonovDamping = f
 
-            S = numpy.diag(s)
-
             # filter cutoff
             fcutoff = 0.01
             fcutoff_ind = numpy.where(f > fcutoff)[0][-1]
 
-            V = V[:, :fcutoff_ind]
+            Vh = Vh[:fcutoff_ind, :]
             U = U[:, :fcutoff_ind]
-            S = S[:fcutoff_ind, :fcutoff_ind]
-            s = numpy.diag(S)
+            s = s[:fcutoff_ind]
             f = s * s / (s * s + self.tikhonov_lambda)
             print('  filter cutoff %1.3e at index %d' % (fcutoff, fcutoff_ind))
             print('  smallest filter coefficient: %1.3e' % f[-1])
 
-            invReg = sparse.diags(1 / (s * s + self.tikhonov_lambda))
-            self.W_out = (V @ (invReg @ (S @ (U.T @ (H.T @ trainY))))).T
+            S = sparse.diags(s, shape=(fcutoff_ind, fcutoff_ind), format='csc')
+            invReg = sparse.diags(1 / (s * s + self.tikhonov_lambda),
+                                  format='csc')
+            self.W_out = (Vh.T @ (invReg @ (S @ (U.T @ (H.T @ trainY))))).T
         else:
             raise Exception('Invalid regressionSolver parameter')
 
