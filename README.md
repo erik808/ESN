@@ -1,2 +1,2 @@
 # ESN 
-This will hold my own implementations of echo state networks 
+Here we maintain matlab and python implementations of an echo state network (ESN).
