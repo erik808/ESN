@@ -1,11 +1,11 @@
 % Create Lorenz63 data
 dt     = 0.02;
 Tend   = 125;
-T      = floor(Tend / dt);
+T      = floor(Tend / dt)
 [U, Y] = createLorenz63(0.02, [0.1,0.1,0.1], T);
 
 % setup data
-cutoff  = ceil(0.8*T);
+cutoff  = ceil(0.8*T)
 trainU  = U(1:cutoff,:);
 trainY  = Y(1:cutoff,:);
 testU   = U(cutoff+1:end,:);
