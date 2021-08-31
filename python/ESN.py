@@ -103,7 +103,8 @@ class ESN:
         # set the inital state of X: 'random' or 'zero'
         self.reservoirStateInit = 'zero'
 
-        # set the input weight matrix type: 'sparse' or 'full'
+        # set the input weight matrix type: 'sparse', 'sparseOnes',
+        # 'balancedSparse', 'full', 'identity'.
         self.inputMatrixType = 'sparse'
 
         # control size input weight matrix
@@ -217,6 +218,7 @@ class ESN:
         elif self.inputMatrixType == 'balancedSparse':
             # This implementation makes sure that every input element is
             # connected to roughly the same number of reservoir components.
+            # Weights are uniform in [-1,1].
 
             arM = self.Nr // self.Nu  # floor
             arP = (self.Nr + self.Nu - 1) // self.Nu  # ceil
@@ -482,15 +484,23 @@ class ESN:
             self.shiftY[i] = 0.0
 
     def scaleInput(self, x):
+        assert self.shiftU.shape[1] == x.shape[1], \
+            'incompatible dimensions'
         return (x - self.shiftU) * self.scaleU
 
     def scaleOutput(self, x):
+        assert self.shiftY.shape[1] == x.shape[1], \
+            'incompatible dimensions'
         return (x - self.shiftY) * self.scaleY
 
     def unscaleInput(self, x):
+        assert self.shiftU.shape[1] == x.shape[1], \
+            'incompatible dimensions'
         return (x / self.scaleU) + self.shiftU
 
     def unscaleOutput(self, x):
+        assert self.shiftY.shape[1] == x.shape[1], \
+            'incompatible dimensions'
         return (x / self.scaleY) + self.shiftY
 
     def haarmat(self, p):

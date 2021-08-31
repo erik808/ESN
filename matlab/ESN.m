@@ -94,7 +94,8 @@ classdef ESN < handle
         % set the inital state of X: 'random' or 'zero'
         reservoirStateInit (1,1) string = 'zero';
 
-        % set the input weight matrix type: 'sparse' or 'full'
+        % set the input weight matrix type: 'sparse', 'sparseOnes',
+        % 'balancedSparse', 'full', 'identity'.
         inputMatrixType (1,1) string = 'sparse';
 
         % control size input weight matrix
@@ -245,6 +246,7 @@ classdef ESN < handle
             elseif self.inputMatrixType == 'balancedSparse'
                 % This implementation makes sure that every input element is connected
                 % to roughly the same number of reservoir components.
+                % Weights are uniform in [-1,1].
 
                 arM  = floor(self.Nr/self.Nu);
                 arP  = ceil(self.Nr/self.Nu);
@@ -540,21 +542,29 @@ classdef ESN < handle
 
         %-------------------------------------------------------
         function [out] = scaleInput(self, in)
+            assert(size(in,2) == size(self.shiftU,2), ...
+                   'incompatible dimensions');
             out = (in - self.shiftU) .* self.scaleU;
         end
 
         %-------------------------------------------------------
         function [out] = scaleOutput(self, in)
+            assert(size(in,2) == size(self.shiftY,2), ...
+                   'incompatible dimensions');
             out = (in - self.shiftY) .* self.scaleY;
         end
 
         %-------------------------------------------------------
         function [out] = unscaleInput(self, in)
+            assert(size(in,2) == size(self.shiftU,2), ...
+                   'incompatible dimensions');
             out = (in ./ self.scaleU ) + self.shiftU;
         end
 
         %-------------------------------------------------------
         function [out] = unscaleOutput(self, in)
+            assert(size(in,2) == size(self.shiftY,2), ...
+                   'incompatible dimensions');
             out = (in ./ self.scaleY ) + self.shiftY;
         end
 
