@@ -134,7 +134,7 @@ class ESN:
         self.waveletReduction = 1
         self.waveletBlockSize = 1
 
-        # Array that store the damping coefficients computed after a
+        # Array that stores the damping coefficients computed after a
         # TikhonovTSVD solve
         self.TikhonovDamping = 0
 

@@ -125,7 +125,7 @@ classdef ESN < handle
         waveletReduction (1,1) double = 1;
         waveletBlockSize (1,1) double = 1;
 
-        % Array that store the damping coefficients computed after a
+        % Array that stores the damping coefficients computed after a
         % TikhonovTSVD solve
         TikhonovDamping (1,:) double = 0;
     end
