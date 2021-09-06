@@ -19,6 +19,10 @@ classdef ESN < handle
 
         % average degree of the graph W
         avgDegree (1,1) double = 3;
+        
+        % dmd mode: use the regression solver and input/output interface to
+        % create a dmd model.
+        dmdMode (1,1) {mustBeNumericOrLogical} = false;        
 
         % Wconstruction, entriesPerRow option: avg number of entries per row
         entriesPerRow (1,1) {mustBeInteger} = 10;
@@ -89,9 +93,10 @@ classdef ESN < handle
         f_out  = @(y) y;
 
         % inverse output activation
-        if_out = @(y) y;
+        if_out = @(y) y;       
 
-        % set the inital state of X: 'random' or 'zero'
+        % set the inital state of X: 'random', 'zero', 'firstInput' (for
+        % dmdMode)
         reservoirStateInit (1,1) string = 'zero';
 
         % set the input weight matrix type: 'sparse', 'sparseOnes',
@@ -300,7 +305,18 @@ classdef ESN < handle
             self.W_ofb = self.ofbAmplitude * self.W_ofb;
 
         end
-
+        %-------------------------------------------------------
+        function enableDMD(self)
+            fprintf('ESN enabling DMD mode.\n');
+            fprintf(' This affects: Nr, reservoirStateInit, squaredStates.\n');
+            fprintf(' The standard update routine is bypassed and\n');
+            fprintf('  instead: X(2:T,:) = trainU(2:T,:)\n');
+            
+            self.Nr = self.Nu;
+            self.reservoirStateInit = 'firstInput';
+            self.squaredStates = 'disabled';
+        end
+        
         %-------------------------------------------------------
         function train(self, trainU, trainY)
         % Train the ESN with training data trainU and trainY
@@ -314,10 +330,13 @@ classdef ESN < handle
 
             assert(T == size(trainY,1), 'ESN:dimensionError', ...
                    'input and output training data have different number of samples');
-
+            if self.dmdMode
+                self.enableDMD();
+            end
+            
             % Now that we have data we can setup the scaling
-            self.computeScaling(trainU, trainY)
-
+            self.computeScaling(trainU, trainY);
+            
             fprintf('ESN training, input Nu = %d, output Ny = %d\n', self.Nu, self.Ny);
 
             % Apply scaling
@@ -329,19 +348,29 @@ classdef ESN < handle
                 Xinit = self.f(10*randn(1, self.Nr));
             elseif self.reservoirStateInit == 'zero'
                 Xinit = zeros(1, self.Nr);
+            elseif self.reservoirStateInit == 'firstInput'
+                % only in DMD mode
+                Xinit = trainU(1,:);
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid reservoirStateInit parameter');
                 throw(ME);
             end
+            size(Xinit)
+            
             X = [Xinit; zeros(T-1, self.Nr)];
 
             fprintf('ESN iterate state over %d samples... \n', T);
             time = tic;
 
-            % iterate the state, save all neuron activations in X
-            for k = 2:T
-                X(k, :) = self.update(X(k-1, :), trainU(k, :), trainY(k-1, :));
+            if ~self.dmdMode
+                % Normal ESN behaviour: iterate the state, save all neuron activations
+                % in X
+                for k = 2:T
+                    X(k, :) = self.update(X(k-1, :), trainU(k, :), trainY(k-1, :));
+                end
+            else % DMD mode
+                X(2:T,:) = trainU(2:T,:);
             end
 
             self.X = X;
@@ -462,6 +491,10 @@ classdef ESN < handle
         % update the reservoir state
             if nargin < 4
                 y = zeros(1, self.Ny);
+            end
+            
+            if self.dmdMode
+                act = u';
             end
 
             pre = self.W*state' + self.W_in*u' + self.W_ofb*y' + self.bias;
