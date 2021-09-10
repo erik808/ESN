@@ -62,7 +62,7 @@ classdef ESN < handle
         % 'append'
         % 'even'
         squaredStates (1,1) string = 'disabled';
-        
+
         % control time delay coordinates
         timeDelay (1,1) double {mustBeNonnegative} = 0
 
@@ -370,19 +370,20 @@ classdef ESN < handle
             elseif self.squaredStates == 'even' &&  ~isempty(extX);
                 extX(:, 2:2:end) = extX(:, 2:2:end).^2;
             end
-            
+
             if self.feedThrough
                 if isempty(self.ftRange)
                     self.ftRange = 1:self.Nu;
                 end
                 extX = [self.ftAmp*trainU(:,self.ftRange), self.resAmp*extX];
             end
-            
-            if self.timeDelay > 0
-                keyboard
-            end
-
             assert(~isempty(extX), 'enable the feedThrough in pure DMD mode');
+
+            if self.timeDelay > 0
+                [extXrows, extXcols] = size(extX);
+                extX = self.applyTimeDelay(extX, self.timeDelay);
+                trainY = self.applyTimeDelay(trainY, self.timeDelay);
+            end
 
             if self.centerX
                 extX = extX - mean(extX);
@@ -393,7 +394,7 @@ classdef ESN < handle
             end
 
             if self.regressionSolver == 'pinv'
-
+                
                 fprintf('ESN  using pseudo inverse, tol = %1.1e\n', self.pinvTol)
                 P = pinv(extX, self.pinvTol);
                 self.W_out = (P*self.if_out(trainY))';
@@ -434,7 +435,7 @@ classdef ESN < handle
                     Tr = size(H,1);
                     H = [sparse(zeros(Tr, rem)), H]';
                 end
-
+                keyboard
 
                 fprintf(' problem size: %d x %d\n', size(H,2), size(extX,2));
                 [U,S,V] = svd(H'*extX, 'econ');
@@ -464,7 +465,6 @@ classdef ESN < handle
 
                 invReg  = sparse(diag(1./ (s.^2 + self.lambda)));
                 self.W_out = (V*(invReg*(S*(U'*(H'*trainY)))))';
-                keyboard
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid regressionSolver parameter');
@@ -476,6 +476,12 @@ classdef ESN < handle
             predY = self.f_out(extX * self.W_out');
 
             fprintf('ESN training error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
+            
+            %keyboard
+            if self.timeDelay > 0
+                %[m,n] = size(self.W_out);
+                %self.W_out = self.W_out(m-self.Ny+1:m, 1:extXcols);
+            end
         end
 
         %-------------------------------------------------------
@@ -508,12 +514,23 @@ classdef ESN < handle
             elseif self.squaredStates == 'even' && ~self.dmdMode
                 x(2:2:end) = state(2:2:end).^2;
             end
-
+            
             if self.feedThrough
-                out = self.f_out(self.W_out * [self.ftAmp*u(self.ftRange)'; self.resAmp*x'])';
+                x = [self.ftAmp*u(self.ftRange)'; self.resAmp*x'];
             else
-                out = self.f_out(self.W_out * x')';
+                x = x';
             end
+            
+            if self.timeDelay > 0
+                x = repmat(x, self.timeDelay+1, 1);
+            end
+            keyboard
+            out = self.f_out(self.W_out * x)';
+            
+            if self.timeDelay > 0
+                out = out(1:self.Ny);
+            end
+            
         end
 
         %-------------------------------------------------------
@@ -617,5 +634,24 @@ classdef ESN < handle
             W = sparse(W);
         end
 
+        function [Y] = applyTimeDelay(self, X, s, shift)
+        % The states in X are extended with delayed states
+            if nargin < 4
+                shift = 1;
+            end
+            
+            if s <= 0 
+                Y = X;
+                return
+            end
+            
+            [T,n] = size(X); % snapshots times state dimension
+            m = T-shift*s; % reduce the number of snapshot
+            Y = zeros(m, n*(s+1)); % contains s delays and itself
+            % set original and append s delays
+            for i = 1:s+1
+                Y(:,(i-1)*n+1:i*n) =  X(1+(i-1)*shift:m+(i-1)*shift,:);
+            end
+        end
     end
 end
