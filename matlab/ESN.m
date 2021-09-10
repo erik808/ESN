@@ -66,6 +66,9 @@ classdef ESN < handle
         % control time delay coordinates
         timeDelay (1,1) double {mustBeNonnegative} = 0
 
+        % control time delay coordinates
+        timeDelayShift (1,1) double {mustBeNonnegative} = 100
+
         % control feedthrough of u to y: (part of) the input state is appended
         % to the reservoir state activations X and used to fit W_out
         feedThrough (1,1) {mustBeNumericOrLogical} = false;
@@ -381,8 +384,8 @@ classdef ESN < handle
 
             if self.timeDelay > 0
                 [extXrows, extXcols] = size(extX);
-                extX = self.applyTimeDelay(extX, self.timeDelay);
-                trainY = self.applyTimeDelay(trainY, self.timeDelay);
+                extX = self.applyTimeDelay(extX, self.timeDelay, self.timeDelayShift);
+                trainY = self.applyTimeDelay(trainY, self.timeDelay, self.timeDelayShift);
             end
 
             if self.centerX
@@ -476,10 +479,10 @@ classdef ESN < handle
 
             fprintf('ESN training error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
             
-            %keyboard
             if self.timeDelay > 0
-                %[m,n] = size(self.W_out);
-                %self.W_out = self.W_out(m-self.Ny+1:m, 1:extXcols);
+                % select final diagonal block (current state) W_out
+                [m,n] = size(self.W_out);
+                self.W_out = self.W_out(m-self.Ny+1:m, n-extXcols+1:n);
             end
         end
 
@@ -520,16 +523,7 @@ classdef ESN < handle
                 x = x';
             end
             
-            if self.timeDelay > 0
-                x = repmat(x, self.timeDelay+1, 1);
-            end
-            keyboard
-            out = self.f_out(self.W_out * x)';
-            
-            if self.timeDelay > 0
-                out = out(1:self.Ny);
-            end
-            
+            out = self.f_out(self.W_out * x)';            
         end
 
         %-------------------------------------------------------
