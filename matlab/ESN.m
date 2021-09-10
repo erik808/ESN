@@ -435,7 +435,6 @@ classdef ESN < handle
                     Tr = size(H,1);
                     H = [sparse(zeros(Tr, rem)), H]';
                 end
-                keyboard
 
                 fprintf(' problem size: %d x %d\n', size(H,2), size(extX,2));
                 [U,S,V] = svd(H'*extX, 'econ');
