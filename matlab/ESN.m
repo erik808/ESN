@@ -363,11 +363,14 @@ classdef ESN < handle
             end
 
             self.X = X;
+            self.computeW_out(X, trainU, trainY);
 
-            time = tic;
-            fprintf('ESN fitting W_out...\n')
+        end
 
-            extX = self.X;
+        %-------------------------------------------------------
+        function [] = computeW_out(self, X, trainU, trainY)
+        % extend X
+            extX = X;
             if self.squaredStates == 'append' &&  ~isempty(extX);
                 extX = [self.X, self.X.^2];
             elseif self.squaredStates == 'even' &&  ~isempty(extX);
@@ -396,8 +399,11 @@ classdef ESN < handle
                 trainY = trainY - mean(trainY);
             end
 
+            time = tic;
+            fprintf('ESN fitting W_out...\n')
+
             if self.regressionSolver == 'pinv'
-                
+
                 fprintf('ESN  using pseudo inverse, tol = %1.1e\n', self.pinvTol)
                 P = pinv(extX, self.pinvTol);
                 self.W_out = (P*self.if_out(trainY))';
@@ -442,14 +448,6 @@ classdef ESN < handle
                 fprintf(' problem size: %d x %d\n', size(H,2), size(extX,2));
                 [U,S,V] = svd(H'*extX, 'econ');
 
-                %# 1500 should be a parameter #FIXME
-                %[U,S,V,flag] = svds(extX, 1500, 'largest', ...
-                %                     'Tolerance', 1e-6, ...
-                %                     'MaxIterations', 5, ...
-                %                     'Display', true, ...
-                %                     'FailureTreatment','drop');
-                % fprintf('  svd flag  %d \n', flag);
-
                 s = diag(S);
                 f = s.^2 ./ (s.^2 + self.lambda);
                 self.TikhonovDamping = f;
@@ -477,8 +475,8 @@ classdef ESN < handle
             % get training error
             predY = self.f_out(extX * self.W_out');
 
-            fprintf('ESN training error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
-            
+            fprintf('ESN fitting error: %e\n', sqrt(mean((predY(:) - trainY(:)).^2)));
+
             if self.timeDelay > 0
                 % select final diagonal block (current state) W_out
                 [m,n] = size(self.W_out);
@@ -516,14 +514,14 @@ classdef ESN < handle
             elseif self.squaredStates == 'even' && ~self.dmdMode
                 x(2:2:end) = state(2:2:end).^2;
             end
-            
+
             if self.feedThrough
                 x = [self.ftAmp*u(self.ftRange)'; self.resAmp*x'];
             else
                 x = x';
             end
-            
-            out = self.f_out(self.W_out * x)';            
+
+            out = self.f_out(self.W_out * x)';
         end
 
         %-------------------------------------------------------
@@ -551,6 +549,10 @@ classdef ESN < handle
                 self.scaleY = 2.0 ./ (max(Y(:)) - min(Y(:)));
                 self.shiftU = min(U(:)) + 1 ./ self.scaleU;
                 self.shiftY = min(Y(:)) + 1 ./ self.scaleY;
+                self.scaleU = repmat(self.scaleU, 1, size(U,2));
+                self.scaleY = repmat(self.scaleY, 1, size(Y,2));
+                self.shiftU = repmat(self.shiftU, 1, size(U,2));
+                self.shiftY = repmat(self.shiftY, 1, size(Y,2));
                 fprintf('ESN scaling: minMaxAll [-1,1]\n');
 
             elseif self.scalingType == 'standardize'
@@ -632,12 +634,12 @@ classdef ESN < handle
             if nargin < 4
                 shift = 1;
             end
-            
-            if s <= 0 
+
+            if s <= 0
                 Y = X;
                 return
             end
-            
+
             [T,n] = size(X); % snapshots times state dimension
             m = T-shift*s; % reduce the number of snapshot
             Y = zeros(m, n*(s+1)); % contains s delays and itself
