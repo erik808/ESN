@@ -128,6 +128,9 @@ classdef ESN < handle
         % lambda (when using Tikhonov regularization)
         lambda (1,1) double {mustBeNonnegative} = 1.0e-4;
 
+        % filter cutoff
+        fCutoff (1,1) double {mustBeNonnegative} = 1.0e-2;
+
         % tolerance for the pseudo inverse
         pinvTol (1,1) double {mustBeNonnegative} = 1.0e-4;
 
@@ -453,14 +456,13 @@ classdef ESN < handle
                 self.TikhonovDamping = f;
 
                 % filter cutoff
-                fcutoff = 0.01; % NEEDS TO BE A PARAMETER!!
-                fcutoff_ind = find(f > fcutoff, 1, 'last');
+                fcutoff_ind = find(f > self.fCutoff, 1, 'last');
                 V = V(:,1:fcutoff_ind);
                 U = U(:,1:fcutoff_ind);
                 S = sparse(S(1:fcutoff_ind,1:fcutoff_ind));
                 s = diag(full(S));
                 f = s.^2 ./ (s.^2 + self.lambda);
-                fprintf('  filter cutoff %1.3e at index %d\n', fcutoff, fcutoff_ind);
+                fprintf('  filter cutoff %1.3e at index %d\n', self.fCutoff, fcutoff_ind);
                 fprintf('  smallest filter coefficient: %1.3e\n', f(end));
 
                 invReg  = sparse(diag(1./ (s.^2 + self.lambda)));
