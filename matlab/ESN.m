@@ -453,7 +453,7 @@ classdef ESN < handle
                 self.TikhonovDamping = f;
 
                 % filter cutoff
-                fcutoff = 0.01;
+                fcutoff = 0.01; % NEEDS TO BE A PARAMETER!!
                 fcutoff_ind = find(f > fcutoff, 1, 'last');
                 V = V(:,1:fcutoff_ind);
                 U = U(:,1:fcutoff_ind);
