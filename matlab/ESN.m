@@ -128,7 +128,8 @@ classdef ESN < handle
         % lambda (when using Tikhonov regularization)
         lambda (1,1) double {mustBeNonnegative} = 1.0e-4;
 
-        % filter cutoff
+        % Filter cutoff: Tikhonov regularization dampens the singular values
+        % which allows a cutoff at some point.
         fCutoff (1,1) double {mustBeNonnegative} = 1.0e-2;
 
         % tolerance for the pseudo inverse
