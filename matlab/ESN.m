@@ -108,7 +108,7 @@ classdef ESN < handle
 
         % set the input weight matrix type: 'sparse', 'sparseOnes',
         % 'balancedSparse', 'full', 'identity'.
-        inputMatrixType (1,1) string = 'identity';
+        inputMatrixType (1,1) string = 'balancedSparse';
 
         % control size input weight matrix
         inAmplitude (1,1) double {mustBeNonnegative} = 1.0;
