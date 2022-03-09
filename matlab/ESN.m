@@ -203,7 +203,6 @@ classdef ESN < handle
         function createW(self)
         % Create sparse weight matrix with spectral radius rhoMax
 
-            fprintf('ESN avg entries/row in W: %d\n', self.entriesPerRow);
 
             if self.Wconstruction == 'entriesPerRow'
                 D = [];
@@ -215,13 +214,17 @@ classdef ESN < handle
                           (rand(self.Nr,1)-0.5)] ];
                 end
                 self.W = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nr);
+                fprintf('ESN avg entries/row in W: %d\n', self.entriesPerRow);
 
             elseif self.Wconstruction == 'sparsity'
                 self.W = rand(self.Nr)-0.5;
                 self.W(rand(self.Nr) < self.sparsity) = 0;
                 self.W = sparse(self.W);
+                fprintf('ESN sparsity W: %f\n', self.sparsity);
+                
             elseif self.Wconstruction == 'avgDegree'
                 self.W = sprand(self.Nr, self.Nr, self.avgDegree / self.Nr);
+                fprintf('ESN avg degree W: %d\n', self.avgDegree);
             else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid Wconstruction parameter');
