@@ -1,14 +1,17 @@
 
 * Here's a todo list
 
-** TODO setup unit test
-   - The python code should be a port and do exactly what the matlab
-     code does.
-
-   - So feed a few critical members with deterministic arrays and
+** TODO [#A] setup a few unit tests
+   - The python code should be a port and do exactly what the
+     matlab code does.
+   - [ ] So feed a few critical members with deterministic arrays and
      compare with matlab or octave output for the related member in
      matlab.
 
-** TODO setup continuous integration
-   - either in the gitlab repo
-   - or on github
+** TODO [#B] setup continuous integration
+   - [ ] either in the gitlab repo
+   - [ ] or on github
+
+** TODO [#C] integrate with pytorch
+   - [ ] let this implementation be a cell
+   - [ ] implement other cells, like GRU, LSTM
