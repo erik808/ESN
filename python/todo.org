@@ -1,13 +1,17 @@
-
 * Here's a todo list
 
 ** TODO [#A] setup a few unit tests
    - The python code should be a port and do exactly what the
      matlab code does.
+   - [ ] Share dataset (Lorenz63) between matlab and python test
    - [ ] So feed a few critical members with deterministic arrays and
      compare with matlab or octave output for the related member in
      matlab.
-
+*** TODO test minMax1 
+*** TODO test minMax2
+*** TODO test minMaxAll
+*** TODO test standardize
+    
 ** TODO [#B] setup continuous integration
    - [ ] either in the gitlab repo
    - [ ] or on github
