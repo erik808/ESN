@@ -3,5 +3,4 @@ stages:
 
 pytest:
   script:
-    - python --version
-    - pytest -v python/.
+    - python3.9 -m pip install --user 'invoke>=2.0.0'
