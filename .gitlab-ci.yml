@@ -1,20 +1,8 @@
 image: er-harbor.smhi.se/tfolinux/rh9:latest
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-# https://pip.pypa.io/en/stable/topics/caching/
-cache:
-  paths:
-    - .cache/pip
-
 stages:
     - test
-
 pytest:
   stage: test
   script:
-    - pip install -r requirements.txt
     - pytest -v python/.
