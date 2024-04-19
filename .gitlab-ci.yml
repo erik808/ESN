@@ -7,4 +7,5 @@ pytest:
     - pip --version
     - pip install -r requirements.txt
     - python3.9 --version
-    - pytest -v python/.
+    - cd python
+    - pytest -v .
