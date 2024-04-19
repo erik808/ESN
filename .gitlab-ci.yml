@@ -1,4 +1,4 @@
-image: er-harbor.smhi.se/foluft/python
+image: er-harbor.smhi.se/tfolinux/rh9:latest
 
 stages:    
     - test
