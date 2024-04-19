@@ -1,4 +1,4 @@
-image: er-harbor.smhi.se/tfolinux/rh9:latest
+image: er-harbor.smhi.se/public/ubuntu:latest
 
 stages:    
     - test
