@@ -1,15 +1,22 @@
-% Create Lorenz63 data
-dt     = 0.02;
-Tend   = 125;
-T      = floor(Tend / dt)
-[U, Y] = createLorenz63(0.02, [0.1,0.1,0.1], T);
+% % Create Lorenz63 data
+% dt     = 0.02;
+% Tend   = 125;
+% T      = floor(Tend / dt)
+% command='createLorenz63(0.02, [0.1,0.1,0.1], T);'
+% [U, Y] = eval(command);
 
-% setup data
-cutoff  = ceil(0.8*T)
-trainU  = U(1:cutoff,:);
-trainY  = Y(1:cutoff,:);
-testU   = U(cutoff+1:end,:);
-testY   = Y(cutoff+1:end,:);
+% % setup data
+% cutoff  = ceil(0.8*T)
+% trainU  = U(1:cutoff,:);
+% trainY  = Y(1:cutoff,:);
+% testU   = U(cutoff+1:end,:);
+% testY   = Y(cutoff+1:end,:);
+
+% save('testdata_Lorenz64.mat', 'dt', 'Tend', 'T', 'command', 'U', 'Y', ...
+%      'cutoff', 'trainU', 'trainY', 'testU', 'testY', '-v7')
+
+% Load Lorenz63 data
+load('testdata_Lorenz64.mat')
 
 % input/output dimensions
 Nu = size(U,2);
