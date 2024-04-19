@@ -3,5 +3,6 @@ stages:
 
 pytest:
   script:
-    - rpm -qa
+    - yum install -y python3-pip
+    - pip --version
     - python3.9 --version
