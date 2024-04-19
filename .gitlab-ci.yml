@@ -2,10 +2,13 @@ stages:
     - test
 
 pytest:
-  script:
+  stage: test
+
+  before_script:
     - yum -y install python3-pip
     - pip --version
     - pip install -r requirements.txt
-    - python3.9 --version
+    
+  script: 
     - cd python
     - pytest -v .
