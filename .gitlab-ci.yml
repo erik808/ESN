@@ -5,6 +5,6 @@ stages:
 pytest:
   stage: test
   script:
-    - yum install python-dev python-pip
+    - yum install python3-pip
     - pip install -r requirements.txt
     - pytest -v python/.
