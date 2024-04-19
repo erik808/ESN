@@ -5,5 +5,5 @@ stages:
 
 pytest:
   script:
-    - pip install -r requirements.txt
+    - python --version
     - pytest -v python/.
