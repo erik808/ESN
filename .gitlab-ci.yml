@@ -3,6 +3,8 @@ stages:
 
 pytest:
   script:
-    - yum install -y python3-pip
+    - yum -y install python3-pip
     - pip --version
+    - pip install -r requirements.txt
     - python3.9 --version
+    - pytest -v python/.
