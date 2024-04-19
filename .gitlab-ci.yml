@@ -3,5 +3,5 @@ stages:
 
 pytest:
   script:
-    - conda --version
+    - rpm -qa
     - python3.9 --version
