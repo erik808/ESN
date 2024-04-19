@@ -1,10 +1,9 @@
-image: er-harbor.smhi.se/tfolinux/rh9:latest
+image: er-harbor.smhi.se/foluft/python
 
-stages:
+stages:    
     - test
+
 pytest:
-  stage: test
   script:
-    - yum install python3-pip
     - pip install -r requirements.txt
     - pytest -v python/.
