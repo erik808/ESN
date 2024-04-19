@@ -1,5 +1,5 @@
 import time
-import numpy
+import numpy as np
 import scipy
 
 from scipy import sparse
@@ -89,7 +89,7 @@ class ESN:
         self.activation = 'tanh'
 
         # activation function
-        self.f = lambda x: numpy.tanh(x)
+        self.f = lambda x: np.tanh(x)
 
         # set the output activation: 'identity' or 'tanh'
         self.outputActivation = 'identity'
@@ -146,11 +146,11 @@ class ESN:
         self.createW_ofb()
 
         if self.activation == 'tanh':
-            self.f = lambda x: numpy.tanh(x)
+            self.f = lambda x: np.tanh(x)
 
         if self.outputActivation == 'tanh':
-            self.f_out = lambda y: numpy.tanh(y)
-            self.if_out = lambda y: numpy.atanh(y)
+            self.f_out = lambda y: np.tanh(y)
+            self.if_out = lambda y: np.atanh(y)
         elif self.outputActivation == 'identity':
             self.f_out = lambda y: y
             self.if_out = lambda y: y
@@ -171,10 +171,10 @@ class ESN:
             for i in range(self.entriesPerRow):
                 # This method does not give enough variability in the
                 # nnz per row
-                row_idx = numpy.append(row_idx, numpy.arange(self.Nr))
-                col_idx = numpy.append(col_idx, numpy.random.randint(
+                row_idx = np.append(row_idx, np.arange(self.Nr))
+                col_idx = np.append(col_idx, np.random.randint(
                     0, self.Nr - 1, self.Nr))
-                val = numpy.append(val, numpy.random.rand(self.Nr) - 0.5)
+                val = np.append(val, np.random.rand(self.Nr) - 0.5)
 
             self.W = sparse.csc_matrix((val, (row_idx, col_idx)),
                                        (self.Nr, self.Nr))
@@ -204,15 +204,15 @@ class ESN:
         if self.inputMatrixType == 'sparse':
             # Create sparse input weight matrix. This gives a single random
             # connection per row, in a random column.
-            row_idx = numpy.arange(self.Nr)
-            col_idx = numpy.random.randint(0, self.Nu, self.Nr)
-            val = numpy.random.rand(self.Nr) * 2 - 1
+            row_idx = np.arange(self.Nr)
+            col_idx = np.random.randint(0, self.Nu, self.Nr)
+            val = np.random.rand(self.Nr) * 2 - 1
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
         elif self.inputMatrixType == 'sparseOnes':
-            row_idx = numpy.arange(self.Nr)
-            col_idx = numpy.random.randint(0, self.Nu, self.Nr)
-            val = numpy.ones(self.Nr)
+            row_idx = np.arange(self.Nr)
+            col_idx = np.random.randint(0, self.Nu, self.Nr)
+            val = np.ones(self.Nr)
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
         elif self.inputMatrixType == 'balancedSparse':
@@ -225,21 +225,21 @@ class ESN:
             l1 = self.Nr - arM * self.Nu
             l2 = self.Nu - l1
 
-            row_idx = numpy.arange(self.Nr)
+            row_idx = np.arange(self.Nr)
 
             col_idx = []
             for i in range(arP):
-                col_idx = numpy.append(col_idx, numpy.arange(l1))
+                col_idx = np.append(col_idx, np.arange(l1))
             for i in range(arM):
-                col_idx = numpy.append(col_idx, numpy.arange(l1, l1 + l2))
+                col_idx = np.append(col_idx, np.arange(l1, l1 + l2))
 
-            val = numpy.random.rand(self.Nr) * 2 - 1
+            val = np.random.rand(self.Nr) * 2 - 1
 
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
         elif self.inputMatrixType == 'full':
             # Create a random, full input weight matrix
-            self.W_in = numpy.random.rand(self.Nr, self.Nu) * 2 - 1
+            self.W_in = np.random.rand(self.Nr, self.Nu) * 2 - 1
         elif self.inputMatrixType == 'identity':
             self.W_in = sparse.eye(self.Nr, self.Nu)
         else:
@@ -253,14 +253,14 @@ class ESN:
         if self.feedbackMatrixType == 'sparse':
             # Create sparse output feedback weight matrix. This gives a single
             # random connection per row, in a random column.
-            row_idx = numpy.arange(self.Nr)
-            col_idx = numpy.random.randint(0, self.Ny, self.Nr)
-            val = numpy.random.rand(self.Nr) * 2 - 1
+            row_idx = np.arange(self.Nr)
+            col_idx = np.random.randint(0, self.Ny, self.Nr)
+            val = np.random.rand(self.Nr) * 2 - 1
             self.W_ofb = sparse.csc_matrix((val, (row_idx, col_idx)),
                                            (self.Nr, self.Ny))
         elif self.feedbackMatrixType == 'full':
             # Create a random, full output feedback weight matrix
-            self.W_ofb = numpy.random.rand(self.Nr, self.Ny) * 2 - 1
+            self.W_ofb = np.random.rand(self.Nr, self.Ny) * 2 - 1
         else:
             raise Exception('Invalid feedbackMatrixType parameter')
 
@@ -290,13 +290,13 @@ class ESN:
 
         # initialize activations X
         if self.reservoirStateInit == 'random':
-            Xinit = self.f(10 * numpy.random.randn(1, self.Nr))
+            Xinit = self.f(10 * np.random.randn(1, self.Nr))
         elif self.reservoirStateInit == 'zero':
-            Xinit = numpy.zeros((1, self.Nr))
+            Xinit = np.zeros((1, self.Nr))
         else:
             raise Exception('Invalid reservoirStateInit parameter')
 
-        X = numpy.append(Xinit, numpy.zeros((T-1, self.Nr)), 0)
+        X = np.append(Xinit, np.zeros((T-1, self.Nr)), 0)
 
         print('ESN iterate state over %d samples... ' % T)
         tstart = time.time()
@@ -314,26 +314,26 @@ class ESN:
 
         extX = self.X
         if self.squaredStates == 'append':
-            extX = numpy.append(self.X, self.X * self.X)
+            extX = np.append(self.X, self.X * self.X)
         elif self.squaredStates == 'even':
             extX[:, 1:2:] = extX[:, 1:2:] * extX[:, 1:2:]
 
         if self.feedThrough:
             if self.ftRange is None:
-                self.ftRange = numpy.arange(self.Nu)
+                self.ftRange = np.arange(self.Nu)
 
-            extX = numpy.append(self.ftAmp * trainU[:, self.ftRange],
+            extX = np.append(self.ftAmp * trainU[:, self.ftRange],
                                 self.resAmp * extX)
 
         if self.centerX:
-            extX = extX - numpy.mean(extX)
+            extX = extX - np.mean(extX)
 
         if self.centerY:
-            trainY = trainY - numpy.mean(trainY)
+            trainY = trainY - np.mean(trainY)
 
         if self.regressionSolver == 'pinv':
             print('ESN  using pseudo inverse, tol = %1.1e' % self.pinvTol)
-            P = numpy.linalg.pinv(extX, self.pinvTol)
+            P = np.linalg.pinv(extX, self.pinvTol)
             self.W_out = (P @ self.if_out(trainY)).T
         elif self.regressionSolver == 'TikhonovNormalEquations':
             print('ESN  using Tikhonov regularization, lambda = %1.1e' %
@@ -343,7 +343,7 @@ class ESN:
             Xnormal = extX.T @ extX + self.tikhonov_lambda * \
                 sparse.eye(extX.shape[1])
             b = extX.T @ self.if_out(trainY)
-            self.W_out = numpy.linalg.solve(Xnormal, b).T
+            self.W_out = np.linalg.solve(Xnormal, b).T
         elif self.regressionSolver == 'TikhonovTSVD':
             print('ESN using TSVD and Tikhonov regularization, lambda = %1.1e'
                   % self.tikhonov_lambda)
@@ -386,7 +386,7 @@ class ESN:
 
             # filter cutoff
             fcutoff = 0.01
-            fcutoff_ind = numpy.where(f > fcutoff)[0][-1]
+            fcutoff_ind = np.where(f > fcutoff)[0][-1]
 
             Vh = Vh[:fcutoff_ind, :]
             U = U[:, :fcutoff_ind]
@@ -408,28 +408,28 @@ class ESN:
         predY = self.f_out(extX @ self.W_out.T)
 
         print('ESN training error: %e' %
-              numpy.sqrt(numpy.mean((predY - trainY) * (predY - trainY))))
+              np.sqrt(np.mean((predY - trainY) * (predY - trainY))))
 
     def update(self, state, u, y=None):
         '''Update the reservoir state'''
         if y is None:
-            y = numpy.zeros((1, self.Ny))
+            y = np.zeros((1, self.Ny))
 
         pre = self.W @ state.T + self.W_in @ u.T + self.W_ofb @ y.T + self.bias
 
         return self.alpha * self.f(pre) + (1 - self.alpha) * state.T + \
-            self.noiseAmplitude * (numpy.random.rand(self.Nr) - 0.5)
+            self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5)
 
     def apply(self, state, u):
         x = state
 
         if self.squaredStates == 'append':
-            x = numpy.append(state, state * state)
+            x = np.append(state, state * state)
         elif self.squaredStates == 'even':
             x[1:2:] = state[1:2:] * state[1:2:]
 
         if self.feedThrough:
-            return self.f_out(self.W_out @ numpy.append(
+            return self.f_out(self.W_out @ np.append(
                 self.ftAmp * u(self.ftRange), self.resAmp * x))
         else:
             return self.f_out(self.W_out @ x.T).T
@@ -437,37 +437,42 @@ class ESN:
     def computeScaling(self, U, Y):
         if self.scalingType == 'none':
             print('ESN scaling: none or user specified')
+
         elif self.scalingType == 'minMax1':
-            self.scaleU = 1.0 / (numpy.max(U) - numpy.min(U))
-            self.scaleY = 1.0 / (numpy.max(Y) - numpy.min(Y))
-            self.shiftU = numpy.min(U)
-            self.shiftY = numpy.min(Y)
+            self.scaleU = 1.0 / (np.max(U, axis=0) - np.min(U, axis=0))
+            self.scaleY = 1.0 / (np.max(Y, axis=0) - np.min(Y, axis=0))
+            self.shiftU = np.min(U, axis=0)
+            self.shiftY = np.min(Y, axis=0)
             print('ESN scaling: minMax1 [0,1]')
+
         elif self.scalingType == 'minMax2':
-            self.scaleU = 2.0 / (numpy.max(U) - numpy.min(U))
-            self.scaleY = 2.0 / (numpy.max(Y) - numpy.min(Y))
-            self.shiftU = numpy.min(U) + 1 / self.scaleU
-            self.shiftY = numpy.min(Y) + 1 / self.scaleY
+            self.scaleU = 2.0 / (np.max(U, axis=0) - np.min(U, axis=0))
+            self.scaleY = 2.0 / (np.max(Y, axis=0) - np.min(Y, axis=0))
+            self.shiftU = np.min(U, axis=0) + 1 / self.scaleU
+            self.shiftY = np.min(Y, axis=0) + 1 / self.scaleY
             print('ESN scaling: minMax2 [-1,1]')
+
         elif self.scalingType == 'minMaxAll':
-            self.scaleU = 2.0 / (numpy.max(U) - numpy.min(U))
-            self.scaleY = 2.0 / (numpy.max(Y) - numpy.min(Y))
-            self.shiftU = numpy.min(U) + 1 / self.scaleU
-            self.shiftY = numpy.min(Y) + 1 / self.scaleY
+            self.scaleU = 2.0 / (np.max(U) - np.min(U))
+            self.scaleY = 2.0 / (np.max(Y) - np.min(Y))
+            self.shiftU = np.min(U) + 1 / self.scaleU
+            self.shiftY = np.min(Y) + 1 / self.scaleY
             print('ESN scaling: minMaxAll [-1,1]')
 
+            ## TODO Repmat????? tile
+
         elif self.scalingType == 'standardize':
-            self.scaleU = 1.0 / numpy.std(U)
-            self.scaleY = 1.0 / numpy.std(Y)
-            self.shiftU = numpy.mean(U)
-            self.shiftY = numpy.mean(Y)
+            self.scaleU = 1.0 / np.std(U, axis=0)
+            self.scaleY = 1.0 / np.std(Y, axis=0)
+            self.shiftU = np.mean(U, axis=0)
+            self.shiftY = np.mean(Y, axis=0)
             print('ESN scaling: standardize')
         else:
             raise Exception('invalid scalingType parameter')
 
         # detect constant datapoints,
-        idinfU = numpy.where(numpy.isinf(self.scaleU))
-        idinfY = numpy.where(numpy.isinf(self.scaleY))
+        idinfU = np.where(np.isinf(self.scaleU))
+        idinfY = np.where(np.isinf(self.scaleY))
 
         idinfU = idinfU[0]
         idinfY = idinfY[0]
@@ -484,24 +489,31 @@ class ESN:
             self.shiftY[i] = 0.0
 
     def scaleInput(self, x):
-        assert self.shiftU.shape[1] == x.shape[1], \
-            'incompatible dimensions'
+        # only allowing the shifts to have ndim=1 and length
+        # corresponding to #columns in x
+        assert (self.shiftU.ndim == 1 and
+                len(self.shiftU) == x.shape[1]), \
+                'incompatible dimensions'
         return (x - self.shiftU) * self.scaleU
 
     def scaleOutput(self, x):
-        assert self.shiftY.shape[1] == x.shape[1], \
-            'incompatible dimensions'
+        assert (self.shiftY.ndim == 1 and
+                len(self.shiftY) == x.shape[1]), \
+                'incompatible dimensions'
         return (x - self.shiftY) * self.scaleY
 
     def unscaleInput(self, x):
-        assert self.shiftU.shape[1] == x.shape[1], \
-            'incompatible dimensions'
+        assert (self.shiftU.ndim == 1 and
+                len(self.shiftU) == x.shape[1]), \
+                'incompatible dimensions'
         return (x / self.scaleU) + self.shiftU
 
     def unscaleOutput(self, x):
-        assert self.shiftY.shape[1] == x.shape[1], \
-            'incompatible dimensions'
+        assert (self.shiftY.ndim == 1 and
+                len(self.shiftY) == x.shape[1]), \
+                'incompatible dimensions'
         return (x / self.scaleY) + self.shiftY
+
 
     def haarmat(self, p):
         ''' builds a single orthogonal Haar wavelet block of size p x p'''
@@ -509,15 +521,15 @@ class ESN:
         if p == 1:
             return 1
 
-        assert round(numpy.log2(p)) == numpy.log2(p), \
+        assert round(np.log2(p)) == np.log2(p), \
             'wavelet block size should be a power of 2'
 
-        W = 1 / numpy.sqrt(2) * numpy.array([1, 1, 1, -1])
+        W = 1 / np.sqrt(2) * np.array([1, 1, 1, -1])
         dim = 2
         while dim < p:
-            W = 1 / numpy.sqrt(2) * numpy.append(
-                numpy.kron(W, numpy.array([1, 1])),
-                numpy.kron(numpy.eye(dim), numpy.array([1, -1])))
+            W = 1 / np.sqrt(2) * np.append(
+                np.kron(W, np.array([1, 1])),
+                np.kron(np.eye(dim), np.array([1, -1])))
             dim = W.shape[0]
 
         return sparse.csc_matrix(W)
