@@ -348,7 +348,7 @@ classdef ESN < handle
                 Xinit = self.f(10*randn(1, self.Nr));
             elseif self.reservoirStateInit == 'zero'
                 Xinit = zeros(1, self.Nr);
-% %             else
+            else
                 ME = MException('ESN:invalidParameter', ...
                                 'invalid reservoirStateInit parameter');
                 throw(ME);
@@ -589,7 +589,6 @@ classdef ESN < handle
 
         %-------------------------------------------------------
         function [out] = scaleInput(self, in)
-            keyboard
             assert(size(in,2) == size(self.shiftU,2), ...
                    'incompatible dimensions');
             out = (in - self.shiftU) .* self.scaleU;
