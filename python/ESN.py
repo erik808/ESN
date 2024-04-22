@@ -185,8 +185,8 @@ class ESN:
 
         elif self.Wconstruction == 'avgDegree':
             self.W = sparse.rand(self.Nr, self.Nr,
-                                 self.avgDegree / self.Nr,
-                                 format='csc')
+                                 density=self.avgDegree / self.Nr,
+                                 format='csr')
         else:
             raise Exception('Invalid Wconstruction parameter')
 

@@ -142,7 +142,8 @@ def test_standardize():
                   [0.123450523501821, 0.109698216148058, 0.116749992517157],
                   [0.123450597695880, 0.109698292330504, 0.116814974565204])
 
-def _test_W(Wconstruction, final_entries, test_norm):
+def _test_W(Wconstruction, final_entries, test_norm,
+            do_value_test=True, norm_tol=1e-6):
     # training data
     trainU, trainY = load_testdata_lorenz63()
 
@@ -159,10 +160,11 @@ def _test_W(Wconstruction, final_entries, test_norm):
     mv_arr = esn.W @ test_array
 
     # check final 10 entries
-    assert mv_arr[-10:] == pytest.approx(final_entries,
-                                         abs=1e-8)
+    if do_value_test:
+        assert mv_arr[-10:] == pytest.approx(final_entries,
+                                             abs=1e-8)
     assert np.linalg.norm(mv_arr) == pytest.approx(test_norm,
-                                                   abs=1e-6)
+                                                   abs=norm_tol)
 
 def test_W_entriesPerRow():
     final_entries = [
@@ -196,6 +198,28 @@ def test_W_sparsity():
     test_norm = 11.4518966
     _test_W('sparsity', final_entries, test_norm)
 
+def test_W_avgDegree():
+    # final_entries = [
+    #     1.261483629484617,
+    #     1.027458587570080,
+    #     0.823432495274333,
+    #     0.200145110644282,
+    #     0.563179096289681,
+    #     0.767919358617824,
+    #     1.396191514366894,
+    #     0.138388026820576,
+    #     0.040093351466835,
+    #     0.718454690519772]
+
+    # for now disabled, implementation of matlab sprand and
+    # sparse.rand are prob quite different.
+    final_entries = []
+
+    # Doing a rough test only on the norm instead.
+    test_norm = 13.2609592
+    _test_W('avgDegree', final_entries, test_norm,
+            do_value_test=False, norm_tol=1)
+
 if __name__=='__main__':
     test_minMax1()
     test_minMax2()
@@ -204,3 +228,4 @@ if __name__=='__main__':
 
     test_W_entriesPerRow()
     test_W_sparsity()
+    test_W_avgDegree()
