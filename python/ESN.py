@@ -164,20 +164,19 @@ class ESN:
 
         if self.Wconstruction == 'entriesPerRow':
             print('ESN avg entries/row in W: %d' % self.entriesPerRow)
-
-            row_idx = []
-            col_idx = []
-            val = []
+            row_ind = []
+            col_ind = []
+            data = []
             for i in range(self.entriesPerRow):
-                # This method does not give enough variability in the
-                # nnz per row
-                row_idx = np.append(row_idx, np.arange(self.Nr))
-                col_idx = np.append(col_idx, np.random.randint(
-                    0, self.Nr - 1, self.Nr))
-                val = np.append(val, np.random.rand(self.Nr) - 0.5)
-
-            self.W = sparse.csc_matrix((val, (row_idx, col_idx)),
+                row_ind = np.append(row_ind,
+                                    np.arange(self.Nr))
+                col_ind = np.append(col_ind,
+                                    np.ceil(self.Nr * np.random.rand(self.Nr))-1)
+                data = np.append(data,
+                                 (np.random.rand(self.Nr)-0.5))
+            self.W = sparse.csr_matrix((data, (row_ind, col_ind)),
                                        (self.Nr, self.Nr))
+
         elif self.Wconstruction == 'sparsity':
             self.W = sparse.rand(self.Nr, self.Nr,
                                  1 - self.sparsity,
@@ -436,6 +435,14 @@ class ESN:
 
     def computeScaling(self, U, Y):
         if self.scalingType == 'none':
+            if (not isinstance(self.scaleU, np.ndarray) or
+                not isinstance(self.scaleY, np.ndarray) or
+                not isinstance(self.shiftU, np.ndarray) or
+                not isinstance(self.shiftY, np.ndarray)):
+                self.scaleU = np.tile(self.scaleU, np.shape(U)[1])
+                self.scaleY = np.tile(self.scaleY, np.shape(Y)[1])
+                self.shiftU = np.tile(self.shiftU, np.shape(U)[1])
+                self.shiftY = np.tile(self.shiftY, np.shape(Y)[1])
             print('ESN scaling: none or user specified')
 
         elif self.scalingType == 'minMax1':
