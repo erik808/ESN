@@ -142,12 +142,14 @@ def test_standardize():
                   [0.123450523501821, 0.109698216148058, 0.116749992517157],
                   [0.123450597695880, 0.109698292330504, 0.116814974565204])
 
-def test_W_settings():
+def _test_W(Wconstruction, final_entries, test_norm):
+    # training data
+    trainU, trainY = load_testdata_lorenz63()
+
     # seeding
     np.random.seed(1)
-
-    trainU, trainY = load_testdata_lorenz63()
     esn = setup_esn(trainU, trainY)
+    esn.Wconstruction = Wconstruction
     esn.initialize()
 
     # test matrix-vector product with W on random vector
@@ -156,6 +158,13 @@ def test_W_settings():
 
     mv_arr = esn.W @ test_array
 
+    # check final 10 entries
+    assert mv_arr[-10:] == pytest.approx(final_entries,
+                                         abs=1e-8)
+    assert np.linalg.norm(mv_arr) == pytest.approx(test_norm,
+                                                   abs=1e-6)
+
+def test_W_entriesPerRow():
     final_entries = [
         0.115515876153812,
         0.095260089879517,
@@ -168,11 +177,24 @@ def test_W_settings():
         -0.315976624922663,
         -0.207732148746306]
 
-    # check final 10 entries
-    assert mv_arr[-10:] == pytest.approx(final_entries,
-                                         abs=1e-8)
-    assert np.linalg.norm(mv_arr) == pytest.approx(12.3712141,
-                                                   abs=1e-6)
+    test_norm = 12.3712141
+    _test_W('entriesPerRow', final_entries, test_norm)
+
+def test_W_sparsity():
+    final_entries = [
+        -1.114304736887016,
+        -0.275501426501573,
+        -0.167940289742099,
+        -0.332332166370453,
+        0.682000132505937,
+        -0.403856695391554,
+        0.211243072511238,
+        -0.289195199687055,
+        1.049821790132286,
+        0.729814893991415]
+
+    test_norm = 11.4518966
+    _test_W('sparsity', final_entries, test_norm)
 
 if __name__=='__main__':
     test_minMax1()
@@ -180,4 +202,5 @@ if __name__=='__main__':
     test_minMaxAll()
     test_standardize()
 
-    test_W_settings()
+    test_W_entriesPerRow()
+    test_W_sparsity()
