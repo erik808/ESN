@@ -97,11 +97,18 @@ def _test_scaling(scalingType, shiftU_target, shiftY_target,
     esn.initialize()
     esn.train(trainU, trainY)
 
+    coldim = np.shape(trainU)[1]
+    assert len(esn.shiftU) == coldim, 'incorrect shiftU dimension'
+    assert len(esn.shiftY) == coldim, 'incorrect shiftY dimension'
+    assert len(esn.scaleU) == coldim, 'incorrect scaleU dimension'
+    assert len(esn.scaleY) == coldim, 'incorrect scaleY dimension'
+
     # test shifts and scalings
     assert isinstance(esn.shiftU, np.ndarray)
     assert isinstance(esn.shiftY, np.ndarray)
     assert isinstance(esn.scaleU, np.ndarray)
     assert isinstance(esn.scaleY, np.ndarray)
+
     assert esn.shiftU == pytest.approx(shiftU_target, abs=1e-4)
     assert esn.shiftY == pytest.approx(shiftY_target, abs=1e-4)
     assert esn.scaleU == pytest.approx(scaleU_target, abs=1e-4)
@@ -121,7 +128,15 @@ def test_minMax2():
                   [0.0507, 0.0378, 0.0398],
                   [0.0507, 0.0378, 0.0398])
 
+def test_minMaxAll():
+    _test_scaling('minMaxAll',
+                  [13.2708, 13.2708, 13.2708],
+                  [13.2708, 13.2708, 13.2708],
+                  [0.0270 , 0.0270 , 0.0270],
+                  [0.0270 , 0.0270 , 0.0270])
+
 if __name__=='__main__':
 
     test_minMax1()
     test_minMax2()
+    test_minMaxAll()
