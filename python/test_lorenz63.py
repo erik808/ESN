@@ -135,8 +135,16 @@ def test_minMaxAll():
                   [0.0270 , 0.0270 , 0.0270],
                   [0.0270 , 0.0270 , 0.0270])
 
+def test_standardize():
+    _test_scaling('standardize',
+                  [-0.8213,   -0.8215,   23.9932],
+                  [-0.8213,   -0.8215,   23.9932],
+                  [0.1235 ,   0.1097 ,   0.1167],
+                  [0.1235 ,   0.1097 ,   0.1167])
+
 if __name__=='__main__':
 
     test_minMax1()
     test_minMax2()
     test_minMaxAll()
+    test_standardize()
