@@ -178,9 +178,11 @@ class ESN:
                                        (self.Nr, self.Nr))
 
         elif self.Wconstruction == 'sparsity':
-            self.W = sparse.rand(self.Nr, self.Nr,
-                                 1 - self.sparsity,
-                                 format='csc')
+            self.W = np.random.rand(self.Nr, self.Nr)-0.5;
+            rmv_index = np.where(np.random.rand(self.Nr, self.Nr) < self.sparsity)
+            self.W[rmv_index] = 0
+            self.W = sparse.csr_matrix(self.W.T)
+
         elif self.Wconstruction == 'avgDegree':
             self.W = sparse.rand(self.Nr, self.Nr,
                                  self.avgDegree / self.Nr,
