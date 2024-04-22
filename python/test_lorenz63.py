@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.io as sio
 import pytest
+import ipdb
 import ESN
 from importlib import reload
 reload(ESN)
@@ -95,7 +96,7 @@ def _test_scaling(scalingType, shiftU_target, shiftY_target,
 
     # training
     esn.initialize()
-    esn.train(trainU, trainY)
+    esn.computeScaling(trainU, trainY)
 
     coldim = np.shape(trainU)[1]
     assert len(esn.shiftU) == coldim, 'incorrect shiftU dimension'
@@ -139,12 +140,45 @@ def test_standardize():
     _test_scaling('standardize',
                   [-0.821302058844881,-0.821549171591466, 23.993174055920623],
                   [-0.821351481394199,-0.821629117825128, 23.995399340318425],
-                  [0.123450523501821, 0.109698216148058,  0.116749992517157],
-                  [0.123450597695880, 0.109698292330504,  0.116814974565204])
+                  [0.123450523501821, 0.109698216148058, 0.116749992517157],
+                  [0.123450597695880, 0.109698292330504, 0.116814974565204])
+
+def test_W_settings():
+    # seeding
+    np.random.seed(1)
+
+    trainU, trainY = load_testdata_lorenz63()
+    esn = setup_esn(trainU, trainY)
+    esn.initialize()
+
+    # test matrix-vector product with W on random vector
+    np.random.seed(1)
+    test_array = np.random.rand(esn.Nr)
+
+    mv_arr = esn.W @ test_array
+
+    final_entries = [
+        0.115515876153812,
+        0.095260089879517,
+        1.251568402435540,
+        -0.268846439126479,
+        -0.166194137874266,
+        0.254244828208688,
+        -1.364218695779681,
+        -0.391941646487290,
+        -0.315976624922663,
+        -0.207732148746306]
+
+    # check final 10 entries
+    assert mv_arr[-10:] == pytest.approx(final_entries,
+                                         abs=1e-8)
+    assert np.linalg.norm(mv_arr) == pytest.approx(12.3712141,
+                                                   abs=1e-6)
 
 if __name__=='__main__':
-
     test_minMax1()
     test_minMax2()
     test_minMaxAll()
     test_standardize()
+
+    test_W_settings()
