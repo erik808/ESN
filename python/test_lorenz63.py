@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.io as sio
 import pytest
-import ipdb
 import ESN
 from importlib import reload
 reload(ESN)
