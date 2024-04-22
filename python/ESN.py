@@ -457,9 +457,12 @@ class ESN:
             self.scaleY = 2.0 / (np.max(Y) - np.min(Y))
             self.shiftU = np.min(U) + 1 / self.scaleU
             self.shiftY = np.min(Y) + 1 / self.scaleY
-            print('ESN scaling: minMaxAll [-1,1]')
 
-            ## TODO Repmat????? tile
+            self.scaleU = np.tile(self.scaleU, np.shape(U)[1])
+            self.scaleY = np.tile(self.scaleY, np.shape(Y)[1])
+            self.shiftU = np.tile(self.shiftU, np.shape(U)[1])
+            self.shiftY = np.tile(self.shiftY, np.shape(Y)[1])
+            print('ESN scaling: minMaxAll [-1,1]')
 
         elif self.scalingType == 'standardize':
             self.scaleU = 1.0 / np.std(U, axis=0)
