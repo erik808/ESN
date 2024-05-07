@@ -282,7 +282,8 @@ class ESN:
             # Create sparse output feedback weight matrix. This gives a single
             # random connection per row, in a random column.
             row_idx = np.arange(self.Nr)
-            col_idx = np.random.randint(0, self.Ny, self.Nr)
+            col_idx = np.floor(self.Ny * np.random.rand(self.Nr))
+            # col_idx = np.random.randint(0, self.Ny, self.Nr)
             val = np.random.rand(self.Nr) * 2 - 1
             self.W_ofb = sparse.csc_matrix((val, (row_idx, col_idx)),
                                            (self.Nr, self.Ny))

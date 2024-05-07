@@ -276,20 +276,45 @@ def test_Win_inAmplitude():
               test_val = 0,
               test_nrm = 1.027096341160178)
 
+def _test_Wofb(feedbackMatrixType, ofbAmplitude, test_val, test_nrm):
+    # training data
+    trainU, trainY = load_testdata_lorenz63()
+
+    # seeding
+    np.random.seed(1)
+    esn = setup_esn(trainU, trainY)
+    esn.feedbackMatrixType = feedbackMatrixType
+    esn.ofbAmplitude = ofbAmplitude
+    esn.initialize()
+
+    np.random.seed(1)
+    test_array = np.random.rand(esn.Nu)
+    prod = esn.W_in @ test_array
+
+    assert prod[-1] == pytest.approx(test_val, abs=1e-6)
+    assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
+
+def test_Wofb_sparse():
+    _test_Wofb(feedbackMatrixType = 'sparse',
+               ofbAmplitude = 0.1,
+               test_val = -0.038553473052732,
+               test_nrm = 0.497486248307358)
 
 if __name__=='__main__':
-    test_minMax1()
-    test_minMax2()
-    test_minMaxAll()
-    test_standardize()
+    # test_minMax1()
+    # test_minMax2()
+    # test_minMaxAll()
+    # test_standardize()
 
-    test_W_entriesPerRow()
-    test_W_sparsity()
-    test_W_avgDegree()
+    # test_W_entriesPerRow()
+    # test_W_sparsity()
+    # test_W_avgDegree()
 
-    test_Win_full()
-    test_Win_balancedSparse()
-    test_Win_sparse()
-    test_Win_sparseOnes()
-    test_Win_identity()
-    test_Win_inAmplitude()
+    # test_Win_full()
+    # test_Win_balancedSparse()
+    # test_Win_sparse()
+    # test_Win_sparseOnes()
+    # test_Win_identity()
+    # test_Win_inAmplitude()
+
+    test_Wofb_sparse()
