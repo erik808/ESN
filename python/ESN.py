@@ -221,19 +221,35 @@ class ESN:
             # connected to roughly the same number of reservoir components.
             # Weights are uniform in [-1,1].
 
-            arM = self.Nr // self.Nu  # floor
-            arP = (self.Nr + self.Nu - 1) // self.Nu  # ceil
-            l1 = self.Nr - arM * self.Nu
+
+                # arM  = floor(self.Nr/self.Nu);
+                # arP  = ceil(self.Nr/self.Nu);
+                # l1   = self.Nr - arM*self.Nu;
+                # l2   = self.Nu - l1;
+
+                # ico  = 1:self.Nr;
+
+                # jco1 = (1:l1) .* ones(arP, l1);
+                # jco2 = (l1+1:l1+l2) .* ones(arM, l2);
+                # jco  = [jco1(:) ; jco2(:)];
+
+
+            arM = self.Nr // self.Nu  # floor(self.Nr/self.Nu)
+            arP = (self.Nr + self.Nu - 1) // self.Nu  # ceil(self.Nr/self.Nu)
+            l1 = self.Nr - arM * self.Nu # nonzero remainder
             l2 = self.Nu - l1
 
             row_idx = np.arange(self.Nr)
 
-            col_idx = []
-            for i in range(arP):
-                col_idx = np.append(col_idx, np.arange(l1))
-            for i in range(arM):
-                col_idx = np.append(col_idx, np.arange(l1, l1 + l2))
+            col_idx1 = (np.arange(l1) * np.ones((arP, l1)))\
+                .flatten(order='F') if l1 > 0 else []
+            col_idx2 = (np.arange(l1,l1+l2) * np.ones((arM, l2)))\
+                .flatten(order='F')
 
+            col_idx = []
+            col_idx = np.append(col_idx, col_idx1)
+            col_idx = np.append(col_idx, col_idx2)
+            
             val = np.random.rand(self.Nr) * 2 - 1
 
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),

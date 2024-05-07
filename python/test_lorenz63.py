@@ -246,8 +246,8 @@ def test_Win_full():
 
 def test_Win_balancedSparse():
     _test_Win('balancedSparse',
-              test_val = 0.244289994102627,
-              test_nrm = 8.172723040202341)
+              test_val = 4.412244631073649e-05,
+              test_nrm = 4.890732268750472)
 
 if __name__=='__main__':
     test_minMax1()
@@ -260,4 +260,4 @@ if __name__=='__main__':
     test_W_avgDegree()
 
     test_Win_full()
-    # test_Win_balancedSparse()
+    test_Win_balancedSparse()
