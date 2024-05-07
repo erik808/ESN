@@ -218,7 +218,7 @@ class ESN:
 
         elif self.inputMatrixType == 'sparseOnes':
             row_idx = np.arange(self.Nr)
-            col_idx = np.random.randint(0, self.Nu, self.Nr)
+            col_idx = np.floor(self.Nu * np.random.rand(self.Nr))
             val = np.ones(self.Nr)
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
