@@ -249,6 +249,11 @@ def test_Win_balancedSparse():
               test_val = 4.412244631073649e-05,
               test_nrm = 4.890732268750472)
 
+def test_Win_sparse():
+    _test_Win('sparse',
+              test_val = 1.326227017595026e-05,
+              test_nrm = 4.565567114152793)
+
 if __name__=='__main__':
     test_minMax1()
     test_minMax2()
@@ -261,3 +266,4 @@ if __name__=='__main__':
 
     test_Win_full()
     test_Win_balancedSparse()
+    test_Win_sparse()

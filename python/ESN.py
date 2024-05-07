@@ -205,23 +205,30 @@ class ESN:
         if self.inputMatrixType == 'sparse':
             # Create sparse input weight matrix. This gives a single random
             # connection per row, in a random column.
+
+            # Original matlab code:
+            # D = [(1:self.Nr)', ceil(self.Nu * rand(self.Nr, 1)), (rand(self.Nr, 1) * 2 - 1)];
+            # self.W_in = sparse(D(:,1), D(:,2), D(:,3), self.Nr, self.Nu);
+
             row_idx = np.arange(self.Nr)
-            col_idx = np.random.randint(0, self.Nu, self.Nr)
+            col_idx = np.floor(self.Nu * np.random.rand(self.Nr))
             val = np.random.rand(self.Nr) * 2 - 1
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
+
         elif self.inputMatrixType == 'sparseOnes':
             row_idx = np.arange(self.Nr)
             col_idx = np.random.randint(0, self.Nu, self.Nr)
             val = np.ones(self.Nr)
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
+
         elif self.inputMatrixType == 'balancedSparse':
             # This implementation makes sure that every input element is
             # connected to roughly the same number of reservoir components.
             # Weights are uniform in [-1,1].
 
-
+                # Original matlab code:
                 # arM  = floor(self.Nr/self.Nu);
                 # arP  = ceil(self.Nr/self.Nu);
                 # l1   = self.Nr - arM*self.Nu;
@@ -249,7 +256,7 @@ class ESN:
             col_idx = []
             col_idx = np.append(col_idx, col_idx1)
             col_idx = np.append(col_idx, col_idx2)
-            
+
             val = np.random.rand(self.Nr) * 2 - 1
 
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
@@ -259,8 +266,10 @@ class ESN:
             # transpose is to ensure the same behavior as the Matlab
             # code.
             self.W_in = (np.random.rand(self.Nu, self.Nr) * 2 - 1).T
+
         elif self.inputMatrixType == 'identity':
             self.W_in = sparse.eye(self.Nr, self.Nu)
+
         else:
             raise Exception('Invalid inputMatrixType parameter')
 
