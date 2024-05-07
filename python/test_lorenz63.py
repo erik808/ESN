@@ -259,6 +259,11 @@ def test_Win_sparseOnes():
               test_val = 1.143748173448866e-04,
               test_nrm = 8.198031104683986)
 
+def test_Win_identity():
+    _test_Win('identity',
+              test_val = 0,
+              test_nrm = 0.832330908557681)
+
 if __name__=='__main__':
     test_minMax1()
     test_minMax2()
@@ -273,3 +278,4 @@ if __name__=='__main__':
     test_Win_balancedSparse()
     test_Win_sparse()
     test_Win_sparseOnes()
+    test_Win_identity()
