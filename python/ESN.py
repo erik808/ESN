@@ -125,6 +125,10 @@ class ESN:
         # lambda (when using Tikhonov regularization)
         self.tikhonov_lambda = 1.0e-4
 
+        # Filter cutoff: Tikhonov regularization dampens the singular
+        # values which allows a cutoff at some point.
+        self.fCutoff = 1.0e-2;
+
         # tolerance for the pseudo inverse
         self.pinvTol = 1.0e-4
 
@@ -402,20 +406,12 @@ class ESN:
             print(' problem size: %d x %d' % (H.shape[1], extX.shape[1]))
             U, s, Vh = scipy.linalg.svd(H.T @ extX, False)
 
-            # # 1500 should be a parameter #FIXME
-            # [U,S,V,flag] = svds(extX, 1500, 'largest', ...
-            #                     'Tolerance', 1e-6, ...
-            #                     'MaxIterations', 5, ...
-            #                     'Display', true, ...
-            #                     'FailureTreatment','drop')
-            # print('  svd flag  %d ', flag)
-
             f = s * s / (s * s + self.tikhonov_lambda)
             self.TikhonovDamping = f
 
             # filter cutoff
-            fcutoff = 0.01
-            fcutoff_ind = np.where(f > fcutoff)[0][-1]
+            fcutoff = self.fCutoff
+            fcutoff_ind = np.where(f > fcutoff)[0][-1]+1
 
             Vh = Vh[:fcutoff_ind, :]
             U = U[:, :fcutoff_ind]
