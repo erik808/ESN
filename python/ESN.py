@@ -289,7 +289,7 @@ class ESN:
                                            (self.Nr, self.Ny))
         elif self.feedbackMatrixType == 'full':
             # Create a random, full output feedback weight matrix
-            self.W_ofb = np.random.rand(self.Nr, self.Ny) * 2 - 1
+            self.W_ofb = (np.random.rand(self.Ny, self.Nr) * 2 - 1).T
         else:
             raise Exception('Invalid feedbackMatrixType parameter')
 

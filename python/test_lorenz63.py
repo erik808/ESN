@@ -289,7 +289,7 @@ def _test_Wofb(feedbackMatrixType, ofbAmplitude, test_val, test_nrm):
 
     np.random.seed(1)
     test_array = np.random.rand(esn.Nu)
-    prod = esn.W_in @ test_array
+    prod = esn.W_ofb @ test_array
 
     assert prod[-1] == pytest.approx(test_val, abs=1e-6)
     assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
@@ -299,6 +299,12 @@ def test_Wofb_sparse():
                ofbAmplitude = 0.1,
                test_val = -0.038553473052732,
                test_nrm = 0.497486248307358)
+
+def test_Wofb_full():
+    _test_Wofb(feedbackMatrixType = 'full',
+               ofbAmplitude = 0.1,
+               test_val = -0.032721482782959,
+               test_nrm = 0.850742658756709)
 
 if __name__=='__main__':
     # test_minMax1()
