@@ -222,7 +222,7 @@ def test_W_avgDegree():
     _test_W('avgDegree', final_entries, test_norm,
             do_value_test=False, norm_tol=1)
 
-def _test_Win(inputMatrixType, test_val, test_nrm):
+def _test_Win(inputMatrixType, inAmplitude, test_val, test_nrm):
     # training data
     trainU, trainY = load_testdata_lorenz63()
 
@@ -230,6 +230,7 @@ def _test_Win(inputMatrixType, test_val, test_nrm):
     np.random.seed(1)
     esn = setup_esn(trainU, trainY)
     esn.inputMatrixType = inputMatrixType
+    esn.inAmplitude = inAmplitude
     esn.initialize()
 
     np.random.seed(1)
@@ -240,29 +241,41 @@ def _test_Win(inputMatrixType, test_val, test_nrm):
     assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
 
 def test_Win_full():
-    _test_Win('full',
+    _test_Win(inputMatrixType = 'full',
+              inAmplitude = 1,
               test_val = 0.244289994102627,
               test_nrm = 8.172723040202341)
 
 def test_Win_balancedSparse():
-    _test_Win('balancedSparse',
+    _test_Win(inputMatrixType = 'balancedSparse',
+              inAmplitude = 1,
               test_val = 4.412244631073649e-05,
               test_nrm = 4.890732268750472)
 
 def test_Win_sparse():
-    _test_Win('sparse',
+    _test_Win(inputMatrixType = 'sparse',
+              inAmplitude = 1,
               test_val = 1.326227017595026e-05,
               test_nrm = 4.565567114152793)
 
 def test_Win_sparseOnes():
-    _test_Win('sparseOnes',
+    _test_Win(inputMatrixType = 'sparseOnes',
+              inAmplitude = 1,
               test_val = 1.143748173448866e-04,
               test_nrm = 8.198031104683986)
 
 def test_Win_identity():
-    _test_Win('identity',
+    _test_Win(inputMatrixType = 'identity',
+              inAmplitude = 1,
               test_val = 0,
               test_nrm = 0.832330908557681)
+
+def test_Win_inAmplitude():
+    _test_Win(inputMatrixType = 'identity',
+              inAmplitude = 1.234,
+              test_val = 0,
+              test_nrm = 1.027096341160178)
+
 
 if __name__=='__main__':
     test_minMax1()
@@ -279,3 +292,4 @@ if __name__=='__main__':
     test_Win_sparse()
     test_Win_sparseOnes()
     test_Win_identity()
+    test_Win_inAmplitude()
