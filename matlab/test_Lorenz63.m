@@ -25,6 +25,8 @@ Ny = size(Y,2);
 % reservoir size
 Nr = 300;
 
+% seed
+rng(1)
 esn = ESN(Nr, Nu, Ny);
 
 % change a few parameters

@@ -221,7 +221,7 @@ classdef ESN < handle
                 self.W(rand(self.Nr) < self.sparsity) = 0;
                 self.W = sparse(self.W);
                 fprintf('ESN sparsity W: %f\n', self.sparsity);
-                
+
             elseif self.Wconstruction == 'avgDegree'
                 self.W = sprand(self.Nr, self.Nr, self.avgDegree / self.Nr);
                 fprintf('ESN avg degree W: %d\n', self.avgDegree);
@@ -317,7 +317,6 @@ classdef ESN < handle
                 throw(ME);
             end
             self.W_ofb = self.ofbAmplitude * self.W_ofb;
-
         end
 
         %-------------------------------------------------------
