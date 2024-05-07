@@ -80,6 +80,7 @@ def set_default_params(esn):
     esn.inAmplitude = 1.0
     esn.feedbackMatrixType = 'full'
     esn.ofbAmplitude = 0.0
+    esn.scalingType = 'minMax1'
     esn.feedThrough = False
     esn.pinvTol = 1e-3
     esn.alpha = 1.0
@@ -144,6 +145,7 @@ def test_standardize():
 
 def _test_W(Wconstruction, final_entries, test_norm,
             do_value_test=True, norm_tol=1e-6):
+
     # training data
     trainU, trainY = load_testdata_lorenz63()
 
@@ -220,6 +222,33 @@ def test_W_avgDegree():
     _test_W('avgDegree', final_entries, test_norm,
             do_value_test=False, norm_tol=1)
 
+def _test_Win(inputMatrixType, test_val, test_nrm):
+    # training data
+    trainU, trainY = load_testdata_lorenz63()
+
+    # seeding
+    np.random.seed(1)
+    esn = setup_esn(trainU, trainY)
+    esn.inputMatrixType = inputMatrixType
+    esn.initialize()
+
+    np.random.seed(1)
+    test_array = np.random.rand(esn.Nu)
+    prod = esn.W_in @ test_array
+
+    assert prod[-1] == pytest.approx(test_val, abs=1e-6)
+    assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
+
+def test_Win_full():
+    _test_Win('full',
+              test_val = 0.244289994102627,
+              test_nrm = 8.172723040202341)
+
+def test_Win_balancedSparse():
+    _test_Win('balancedSparse',
+              test_val = 0.244289994102627,
+              test_nrm = 8.172723040202341)
+
 if __name__=='__main__':
     test_minMax1()
     test_minMax2()
@@ -229,3 +258,6 @@ if __name__=='__main__':
     test_W_entriesPerRow()
     test_W_sparsity()
     test_W_avgDegree()
+
+    test_Win_full()
+    # test_Win_balancedSparse()

@@ -239,8 +239,10 @@ class ESN:
             self.W_in = sparse.csc_matrix((val, (row_idx, col_idx)),
                                           (self.Nr, self.Nu))
         elif self.inputMatrixType == 'full':
-            # Create a random, full input weight matrix
-            self.W_in = np.random.rand(self.Nr, self.Nu) * 2 - 1
+            # Create a random, full input weight matrix. Taking the
+            # transpose is to ensure the same behavior as the Matlab
+            # code.
+            self.W_in = (np.random.rand(self.Nu, self.Nr) * 2 - 1).T
         elif self.inputMatrixType == 'identity':
             self.W_in = sparse.eye(self.Nr, self.Nu)
         else:
