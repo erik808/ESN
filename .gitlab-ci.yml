@@ -11,4 +11,4 @@ pytest:
     
   script: 
     - cd python
-    - pytest -v .
+    - pytest -vs .
