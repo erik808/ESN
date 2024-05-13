@@ -328,6 +328,17 @@ def test_training():
     assert prod[-1] == pytest.approx(test_val, abs=1e-6)
     assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
 
+    test_nrm = 8.897798472187780
+    state = esn.X[-1,:]
+    assert np.linalg.norm(state) == pytest.approx(test_nrm, abs=1e-6)
+    return esn
+
+def test_prediction():
+
+    esn = test_training()
+    breakpoint()
+
+
 if __name__=='__main__':
 
     # test_minMax1()
@@ -349,4 +360,5 @@ if __name__=='__main__':
     # test_Wofb_sparse()
     # test_Wofb_full()
 
-    test_training()
+    # test_training()
+    test_prediction()
