@@ -3,6 +3,8 @@ import scipy.io as sio
 import pytest
 import ESN
 from importlib import reload
+import asciichartpy as acp
+
 reload(ESN)
 from ESN import ESN
 
@@ -306,37 +308,93 @@ def test_Wofb_full():
                test_val = -0.032721482782959,
                test_nrm = 0.850742658756709)
 
-def test_training():
+def _test_training(feedthrough,
+                   test_nrm1,
+                   test_val,
+                   test_nrm2,
+                   test_nrm3):
     # training data
     trainU, trainY = load_testdata_lorenz63()
 
     # seeding
     np.random.seed(1)
     esn = setup_esn(trainU, trainY)
+    esn.feedThrough=False
     esn.initialize()
     esn.train(trainU, trainY)
     nrmX = np.linalg.norm(esn.X[-1,:])
-    test_nrm = 8.897798472187780
-    assert nrmX == pytest.approx(test_nrm, abs=1e-6)
+    assert nrmX == pytest.approx(test_nrm1, abs=1e-6)
 
-    test_val = 0.241379038528080
-    test_nrm = 0.452108247200167
     np.random.seed(1)
     test_array = np.random.rand(esn.Nr)
     prod = esn.W_out @ test_array
 
     assert prod[-1] == pytest.approx(test_val, abs=1e-6)
-    assert np.linalg.norm(prod) == pytest.approx(test_nrm, abs=1e-6)
+    assert np.linalg.norm(prod) == pytest.approx(test_nrm2, abs=1e-6)
 
-    test_nrm = 8.897798472187780
     state = esn.X[-1,:]
-    assert np.linalg.norm(state) == pytest.approx(test_nrm, abs=1e-6)
+    assert np.linalg.norm(state) == pytest.approx(test_nrm3, abs=1e-6)
     return esn
 
-def test_prediction():
+def test_training_no_FT():
+    _test_training(feedthrough=False,
+                   test_nrm1=8.897798472187780,
+                   test_val=0.241379038528080,
+                   test_nrm2=0.452108247200167,
+                   test_nrm3=8.897798472187780)
 
-    esn = test_training()
-    breakpoint()
+
+def _test_prediction(feedThrough,
+                     test_nrm1,
+                     test_nrm2):
+
+    # training data
+    trainU, trainY = load_testdata_lorenz63()
+
+    # seeding
+    np.random.seed(1)
+    esn = setup_esn(trainU, trainY)
+    esn.feedThrough=feedThrough
+    esn.initialize()
+    esn.train(trainU, trainY)
+
+    state = esn.X[-1,:]
+
+    test = sio.loadmat('../matlab/testdata_Lorenz64.mat')
+    testU = test['testU']
+    testY = test['testY']
+    trainY = test['trainY']
+    nPred = np.shape(testU)[0]
+    dimY = np.shape(testY)[1]
+    predY = np.zeros((nPred, dimY))
+
+    u = (trainY[-1,:] - esn.shiftU) * esn.scaleU;
+
+    assert np.linalg.norm(u) == pytest.approx(test_nrm1, abs=1e-6)
+
+    predY[0,:] = u
+    for k in range(1, nPred):
+        state = esn.update(state, u, u)
+        if esn.feedThrough:
+            u = esn.f_out(esn.W_out @ np.append(state,u))
+        else:
+            u = esn.f_out(esn.W_out @ state)
+        predY[k,:] = u
+
+    predY = ( predY / esn.scaleY ) + esn.shiftY
+
+    test_arr = predY[500,:]
+    assert np.linalg.norm(test_arr) == pytest.approx(test_nrm2, abs=1e-6)
+
+    print('')
+    print(acp.plot([predY[:100,0].tolist(),testY[0:100,0].tolist()]))
+
+
+def test_prediction_no_FT():
+
+    _test_prediction(feedThrough=False,
+                     test_nrm1=0.676582659999415,
+                     test_nrm2=24.433495297140841)
 
 
 if __name__=='__main__':
@@ -361,4 +419,4 @@ if __name__=='__main__':
     # test_Wofb_full()
 
     # test_training()
-    test_prediction()
+    test_prediction_no_FT()
