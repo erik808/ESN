@@ -47,6 +47,12 @@ esn.initialize;
 % training
 esn.train(trainU, trainY);
 
+rng(1)
+test_array = rand(esn.Nr,1);
+prod = esn.W_out * test_array;
+prod(end)
+norm(prod)
+
 % prediction
 nPred = size(testU,1);
 
@@ -59,6 +65,7 @@ predY = zeros(nPred, size(trainY,2));
 % predict, feed results back into network
 % begin with final training output as input
 u = (trainY(end,:) - esn.shiftU) .* esn.scaleU;
+
 predY(1,:) = u;
 for k = 2:nPred
     state = esn.update(state, u, u)';
@@ -72,6 +79,9 @@ end
 
 % unscale
 predY = ( predY ./ esn.scaleY ) + esn.shiftY;
+
+
+return
 
 % construct time array for plotting
 time = dt*(1:size(predY,1));
