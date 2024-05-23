@@ -355,8 +355,8 @@ class ESN:
             if self.ftRange is None:
                 self.ftRange = np.arange(self.Nu)
 
-            extX = np.append(self.ftAmp * trainU[:, self.ftRange],
-                                self.resAmp * extX)
+            extX = np.hstack([self.ftAmp * trainU[:, self.ftRange],
+                              self.resAmp * extX])
 
         if self.centerX:
             extX = extX - np.mean(extX)

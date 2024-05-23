@@ -391,44 +391,41 @@ def _test_prediction(feedThrough,
     print('-----------')
     print(acp.plot([predY[75:150,0].tolist(),testY[75:150,0].tolist()]))
 
-    print('----- predY vs testY, y ------')
-    print(acp.plot([predY[:75,1].tolist(),testY[0:75,1].tolist()]))
-    print('-----------')
-    print(acp.plot([predY[75:150,1].tolist(),testY[75:150,1].tolist()]))
-
-    print('----- predY vs testY, z ------')
-    print(acp.plot([predY[:75,2].tolist(),testY[0:75,2].tolist()]))
-    print('-----------')
-    print(acp.plot([predY[75:150,2].tolist(),testY[75:150,2].tolist()]))
-
-
 def test_prediction_no_FT():
+    """run a prediction without feedthrough (FT)"""
 
     _test_prediction(feedThrough=False,
                      test_nrm1=0.676582659999415,
                      test_nrm2=24.433495297140841)
 
 
+def test_prediction_with_FT():
+    """run a prediction with feedthrough (FT)"""
+
+    _test_prediction(feedThrough=True,
+                     test_nrm1=0.676582659999415,
+                     test_nrm2=9.353274380093996)
+
 if __name__=='__main__':
 
-    # test_minMax1()
-    # test_minMax2()
-    # test_minMaxAll()
-    # test_standardize()
+    test_minMax1()
+    test_minMax2()
+    test_minMaxAll()
+    test_standardize()
 
-    # test_W_entriesPerRow()
-    # test_W_sparsity()
-    # test_W_avgDegree()
+    test_W_entriesPerRow()
+    test_W_sparsity()
+    test_W_avgDegree()
 
-    # test_Win_full()
-    # test_Win_balancedSparse()
-    # test_Win_sparse()
-    # test_Win_sparseOnes()
-    # test_Win_identity()
-    # test_Win_inAmplitude()
+    test_Win_full()
+    test_Win_balancedSparse()
+    test_Win_sparse()
+    test_Win_sparseOnes()
+    test_Win_identity()
+    test_Win_inAmplitude()
 
-    # test_Wofb_sparse()
-    # test_Wofb_full()
+    test_Wofb_sparse()
+    test_Wofb_full()
 
-    # test_training()
     test_prediction_no_FT()
+    test_prediction_with_FT()

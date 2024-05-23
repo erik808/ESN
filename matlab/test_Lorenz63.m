@@ -38,7 +38,8 @@ esn.inAmplitude        = 1.0;
 esn.feedbackMatrixType = 'full';
 esn.ofbAmplitude       = 0.0;
 esn.scalingType        = 'minMax1';
-esn.feedThrough        = false;
+esn.feedThrough        = true;
+esn.squaredStates      = 'disabled';
 esn.pinvTol            = 1e-3;
 esn.alpha              = 1.0;
 
@@ -46,12 +47,6 @@ esn.initialize;
 
 % training
 esn.train(trainU, trainY);
-
-rng(1)
-test_array = rand(esn.Nr,1);
-prod = esn.W_out * test_array;
-prod(end)
-norm(prod)
 
 % prediction
 nPred = size(testU,1);
@@ -65,7 +60,7 @@ predY = zeros(nPred, size(trainY,2));
 % predict, feed results back into network
 % begin with final training output as input
 u = (trainY(end,:) - esn.shiftU) .* esn.scaleU;
-
+norm(u)
 predY(1,:) = u;
 for k = 2:nPred
     state = esn.update(state, u, u)';
@@ -80,6 +75,7 @@ end
 % unscale
 predY = ( predY ./ esn.scaleY ) + esn.shiftY;
 
+norm(predY(501,:))
 
 return
 
