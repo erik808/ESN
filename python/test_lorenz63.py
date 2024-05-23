@@ -386,8 +386,20 @@ def _test_prediction(feedThrough,
     test_arr = predY[500,:]
     assert np.linalg.norm(test_arr) == pytest.approx(test_nrm2, abs=1e-6)
 
-    print('')
-    print(acp.plot([predY[:100,0].tolist(),testY[0:100,0].tolist()]))
+    print('----- predY vs testY, x ------')
+    print(acp.plot([predY[:75,0].tolist(),testY[0:75,0].tolist()]))
+    print('-----------')
+    print(acp.plot([predY[75:150,0].tolist(),testY[75:150,0].tolist()]))
+
+    print('----- predY vs testY, y ------')
+    print(acp.plot([predY[:75,1].tolist(),testY[0:75,1].tolist()]))
+    print('-----------')
+    print(acp.plot([predY[75:150,1].tolist(),testY[75:150,1].tolist()]))
+
+    print('----- predY vs testY, z ------')
+    print(acp.plot([predY[:75,2].tolist(),testY[0:75,2].tolist()]))
+    print('-----------')
+    print(acp.plot([predY[75:150,2].tolist(),testY[75:150,2].tolist()]))
 
 
 def test_prediction_no_FT():
