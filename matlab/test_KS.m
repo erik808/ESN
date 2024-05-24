@@ -12,6 +12,19 @@ ks_imp.epsilon = epsilon; % set perturbation parameter
 ks_prf.initialize();
 ks_imp.initialize();
 
+rng(1);
+test_vec = rand(N,1);
+out = ks_prf.Jlin * test_vec;
+% norm(out)
+test_vec = rand(N,1);
+out = ks_imp.f(test_vec);
+% norm(out)
+test_vec = rand(N,1);
+test_vec2 = rand(N,1);
+out = ks_imp.J(test_vec)*test_vec2;
+norm(out)
+return
+
 NT = 5000; % timesteps
 dt = 0.25; % timestep size
 train_range=100:2100;

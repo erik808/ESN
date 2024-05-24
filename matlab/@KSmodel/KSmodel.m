@@ -125,7 +125,7 @@ classdef KSmodel < handle
             dydx = self.D1*y;
             D1y  = sparse(1:self.N, 1:self.N, dydx, self.N, self.N);
             yD1  = (sparse(1:self.N, [self.N, 1:self.N-1], y) + ...
-                   sparse(1:self.N, [2:self.N, 1], -y)) / (2*self.dx);
+                    sparse(1:self.N, [2:self.N, 1], -y)) / (2*self.dx);
 
             out  =  -(1/self.L)*(yD1 + D1y) ...
                     -self.Jlin;
