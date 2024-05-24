@@ -156,8 +156,7 @@ classdef KSmodel < handle
                 g = self.g(y, ym, dt, frc);
                 dy = H \ -g;
                 y  = y + dy;
-
-                disp([k, norm(dy)])
+                
                 if (norm(dy) < self.Ntol)
                     break;
                 end

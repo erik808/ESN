@@ -142,6 +142,13 @@ class ESN:
         # TikhonovTSVD solve
         self.TikhonovDamping = 0
 
+    def setPars(self, pars):
+        """ overwrite class attributes with values in pars dict """
+        assert isinstance(pars, dict)
+        for key, value in pars.items():
+            assert key in self.__dir__(), f'{key} not an ESN attribute'
+            setattr(self, key, value)
+
     def initialize(self):
         '''Create W, W_in, W_ofb and set output activation function'''
 
@@ -438,26 +445,29 @@ class ESN:
     def update(self, state, u, y=None):
         '''Update the reservoir state'''
         if y is None:
-            y = np.zeros((1, self.Ny))
+            y = np.zeros(self.Ny)
 
-        pre = self.W @ state.T + self.W_in @ u.T + self.W_ofb @ y.T + self.bias
+        state = state.squeeze()
+        u = u.squeeze()
 
-        return self.alpha * self.f(pre) + (1 - self.alpha) * state.T + \
-            self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5)
+        pre = self.W @ state + self.W_in @ u + self.W_ofb @ y + self.bias
+        
+        return (self.alpha * self.f(pre) + (1 - self.alpha) * state + 
+                self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5))
 
     def apply(self, state, u):
+        state = state.squeeze()
         x = state
-
+        u = u.squeeze()
         if self.squaredStates == 'append':
-            x = np.append(state, state * state)
+            x = np.append(state, state**2)
         elif self.squaredStates == 'even':
-            x[1:2:] = state[1:2:] * state[1:2:]
+            x[1:2:] = state[1:2:]**2
 
         if self.feedThrough:
-            return self.f_out(self.W_out @ np.append(
-                self.ftAmp * u(self.ftRange), self.resAmp * x))
-        else:
-            return self.f_out(self.W_out @ x.T).T
+            x = np.append(self.ftAmp*u[self.ftRange], self.resAmp*x)
+
+        return self.f_out(self.W_out @ x)
 
     def computeScaling(self, U, Y):
         if self.scalingType == 'none':

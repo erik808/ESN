@@ -12,9 +12,6 @@ reload(KSmodel)
 from ESN import ESN
 from KSmodel import KSmodel
 
-data = sio.loadmat('../matlab/testdata_KS.mat')
-
-
 def _standard_KS_setup():
     L = 35
     N = 64
@@ -26,7 +23,6 @@ def _standard_KS_setup():
     ks_imp.initialize()
 
     return ks_prf, ks_imp
-
 
 def _test_KSmodel(component='Jlin'):
     ks_prf, ks_imp = _standard_KS_setup()
@@ -87,6 +83,15 @@ def _test_KSmodel(component='Jlin'):
         assert k == 3
         assert testnorm == pytest.approx(truth, abs=1e-6)
 
+    if component == 'transient':
+        y = ks_prf.x_init
+        dt = 0.25
+        for t in range(100):
+            y, k = ks_prf.step(y, dt)
+
+        testnorm = np.linalg.norm(y)
+        truth = 10.759000089691213
+        assert testnorm == pytest.approx(truth, abs=1e-6)
 
 def test_KSmodel_f():
     _test_KSmodel(component='f')
@@ -100,8 +105,87 @@ def test_KSmodel_Jlin():
 def test_KSmodel_step():
     _test_KSmodel(component='step')
 
+def test_KSmodel_transient():
+    _test_KSmodel(component='transient')
+
+
+
+def _test_KS_ESN(feedThrough=True):
+    ks_prf, ks_imp = _standard_KS_setup()
+    data = sio.loadmat('../matlab/testdata_KS.mat')
+
+    X = data['X']
+    Phi = data['Phi']
+    NT = data['NT']
+    dt = data['dt'][0][0]
+    train_range=range(99,2100)
+    test_range=range(2100,2500)
+
+    # input data
+    # restricted truths and imperfect predictions
+    if feedThrough:
+        U = np.vstack((X[:,:-1],Phi[:,:-1]))
+    else:
+        U = X[:,:-1]
+
+    Y = X[:, 1:] # perfect predictions
+    trainU = U[:, train_range].T
+    trainY = Y[:, train_range].T
+    testU  = U[:, test_range].T
+    testY  = Y[:, test_range].T
+
+    # ESNc settings:
+    esn_pars = {}
+    esn_pars['scalingType']        = 'standardize'
+    esn_pars['Nr']                 = 100
+    esn_pars['rhoMax']             = 0.4
+    esn_pars['alpha']              = 1.0
+    esn_pars['Wconstruction']      = 'avgDegree'
+    esn_pars['avgDegree']          = 3
+    esn_pars['tikhonov_lambda']    = 1e-10
+    esn_pars['bias']               = 0.0
+    esn_pars['squaredStates']      = 'even'
+    esn_pars['reservoirStateInit'] = 'random'
+    esn_pars['inputMatrixType']    = 'balancedSparse'
+    esn_pars['inAmplitude']        = 1.0
+    esn_pars['waveletBlockSize']   = 1.0
+    esn_pars['waveletReduction']   = 1.0
+    esn_pars['feedThrough']        = feedThrough
+    esn_pars['ftRange']            = range(N, 2*N)
+    esn_pars['fCutoff']            = 0.1
+
+    np.random.seed(1)
+    esn = ESN(esn_pars['Nr'], trainU.shape[1], trainY.shape[1])
+    esn.setPars(esn_pars)
+    esn.initialize()
+    esn.train(trainU, trainY)
+
+
+    # Prediction
+    # initialization index
+    init_idx = train_range[-1]+1
+    # initial state for the predictions
+    yk = X[:, init_idx]
+
+    Npred = len(test_range)
+    predY = np.zeros((Npred, N))
+    esn_state = esn.X[-1,:]
+    for i in range(Npred):
+        Pyk, Nk = ks_imp.step(yk, dt)
+        if feedThrough:
+            u_in = np.append(yk.squeeze(), Pyk.squeeze())
+        else:
+            u_in = yk.squeeze()
+
+    u_in      = np.expand_dims(u_in, axis=0)
+    u_in      = esn.scaleInput(u_in)
+    esn_state = esn.update(esn_state, u_in)
+    u_out     = esn.apply(esn_state, u_in)
+    u_out     = np.expand_dims(u_out, axis=0)
+    yk        = esn.unscaleOutput(u_out)
+    predY[i,:] = yk
+
+    breakpoint()
+
 if __name__=='__main__':
-    # test_KSmodel_J()
-    # test_KSmodel_f()
-    # test_KSmodel_Jlin()
-    test_KSmodel_step()
+    _test_KS_ESN()

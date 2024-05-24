@@ -12,28 +12,10 @@ ks_imp.epsilon = epsilon; % set perturbation parameter
 ks_prf.initialize();
 ks_imp.initialize();
 
-rng(1);
-test_vec = rand(N,1);
-out = ks_prf.Jlin * test_vec;
-% norm(out)
-test_vec = rand(N,1);
-out = ks_imp.f(test_vec);
-% norm(out)
-test_vec = rand(N,1);
-test_vec2 = rand(N,1);
-out = ks_imp.J(test_vec)*test_vec2;
-norm(out)
-
-x_init = ks_prf.x_init;
-dt = 0.25;
-xnew = ks_imp.step(x_init, dt);
-norm(xnew)
-return
-
 NT = 5000; % timesteps
 dt = 0.25; % timestep size
 train_range=100:2100;
-test_range=2100:2500;
+test_range=2101:2500;
 
 % generate new data:
 generate_data = false;
@@ -80,7 +62,7 @@ testY = Y(:, test_range)';
 %ESNc settings:
 esn_pars = {};
 esn_pars.scalingType        = 'standardize';
-esn_pars.Nr                 = 1000;
+esn_pars.Nr                 = 100;
 esn_pars.rhoMax             = 0.4;
 esn_pars.alpha              = 1.0;
 esn_pars.Wconstruction      = 'avgDegree';
@@ -103,7 +85,7 @@ rng(1)
 
 esn = ESN(esn_pars.Nr, size(trainU,2), size(trainY,2));
 esn.setPars(esn_pars);
-esn.initialize;
+esn.initialize();
 esn.train(trainU, trainY);
 
 % Prediction
