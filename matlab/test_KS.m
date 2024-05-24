@@ -23,6 +23,11 @@ test_vec = rand(N,1);
 test_vec2 = rand(N,1);
 out = ks_imp.J(test_vec)*test_vec2;
 norm(out)
+
+x_init = ks_prf.x_init;
+dt = 0.25;
+xnew = ks_imp.step(x_init, dt);
+norm(xnew)
 return
 
 NT = 5000; % timesteps

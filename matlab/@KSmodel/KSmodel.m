@@ -157,11 +157,11 @@ classdef KSmodel < handle
                 dy = H \ -g;
                 y  = y + dy;
 
+                disp([k, norm(dy)])
                 if (norm(dy) < self.Ntol)
                     break;
                 end
             end
-
             if k == self.Nkmx
                 ME = MException('KS:convergenceError', ...
                                 'no convergence in Newton iteration');

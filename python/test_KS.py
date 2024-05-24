@@ -76,6 +76,16 @@ def _test_KSmodel(component='Jlin'):
         x_init = ks_prf.x_init
         dt = 0.25
         y, k = ks_prf.step(x_init, dt)
+        testnorm = np.linalg.norm(y)
+        truth = 5.215431600942750e-01
+        assert k == 3
+        assert testnorm == pytest.approx(truth, abs=1e-6)
+
+        y, k = ks_imp.step(x_init, dt)
+        testnorm = np.linalg.norm(y)
+        truth = 5.297663697680071e-01
+        assert k == 3
+        assert testnorm == pytest.approx(truth, abs=1e-6)
 
 
 def test_KSmodel_f():
@@ -87,14 +97,11 @@ def test_KSmodel_J():
 def test_KSmodel_Jlin():
     _test_KSmodel(component='Jlin')
 
-# def test_KSmodel_step():
-#     _test_KSmodel(component='step')
-
-
-
+def test_KSmodel_step():
+    _test_KSmodel(component='step')
 
 if __name__=='__main__':
-    test_KSmodel_J()
-    test_KSmodel_f()
-    test_KSmodel_Jlin()
-    # test_KSmodel_step()
+    # test_KSmodel_J()
+    # test_KSmodel_f()
+    # test_KSmodel_Jlin()
+    test_KSmodel_step()

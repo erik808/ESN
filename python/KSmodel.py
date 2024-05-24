@@ -98,7 +98,8 @@ class KSmodel:
 
     def g(self, yp, ym, dt, frc):
         """ time dependent rhs (backward Euler) """
-        assert len(frc) == self.N
+
+        if frc != 0: assert len(frc) == self.N
         out = yp - ym - dt * (self.f(yp) + frc)
         return out
 
@@ -130,19 +131,23 @@ class KSmodel:
                dt * self.J(y))
         return out
 
-    def  step(self, y, dt, frc=0):
+    def  step(self, y, dt, frc=0, verbosity=0):
         """ perform single step time integration """
+        y = y.squeeze()
         ym = y
 
         # Newton
         for k in range(self.Nkmx):
             H = self.H(y, dt)
             g = self.g(y, ym, dt, frc)
-            breakpoint()
-            # dy = H \ -g;
-            # y  = y + dy;
+            dy = sparse.linalg.spsolve(H, -g)
 
-            if (np.linalg.norm(dy) < self.Ntol):
+            y  = y + dy;
+
+            nrm = np.linalg.norm(dy)
+            if verbosity > 5: print(f'{k}, {nrm}')
+
+            if (nrm < self.Ntol):
                 break
 
             if k == self.Nkmx:

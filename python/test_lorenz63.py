@@ -346,7 +346,8 @@ def test_training_no_FT():
 
 def _test_prediction(feedThrough,
                      test_nrm1,
-                     test_nrm2):
+                     test_nrm2,
+                     verbosity=0):
 
     # training data
     trainU, trainY = load_testdata_lorenz63()
@@ -386,17 +387,19 @@ def _test_prediction(feedThrough,
     test_arr = predY[500,:]
     assert np.linalg.norm(test_arr) == pytest.approx(test_nrm2, abs=1e-6)
 
-    print('----- predY vs testY, x ------')
-    print(acp.plot([predY[:75,0].tolist(),testY[0:75,0].tolist()]))
-    print('-----------')
-    print(acp.plot([predY[75:150,0].tolist(),testY[75:150,0].tolist()]))
+    if verbosity > 5:
+        print('----- predY vs testY, x ------')
+        print(acp.plot([predY[:75,0].tolist(),testY[0:75,0].tolist()]))
+        print('-----------')
+        print(acp.plot([predY[75:150,0].tolist(),testY[75:150,0].tolist()]))
 
 def test_prediction_no_FT():
     """run a prediction without feedthrough (FT)"""
 
     _test_prediction(feedThrough=False,
                      test_nrm1=0.676582659999415,
-                     test_nrm2=24.433495297140841)
+                     test_nrm2=24.433495297140841,
+                     verbosity=10)
 
 
 def test_prediction_with_FT():
@@ -404,7 +407,8 @@ def test_prediction_with_FT():
 
     _test_prediction(feedThrough=True,
                      test_nrm1=0.676582659999415,
-                     test_nrm2=9.353274380093996)
+                     test_nrm2=9.353274380093996,
+                     verbosity=0)
 
 if __name__=='__main__':
 
