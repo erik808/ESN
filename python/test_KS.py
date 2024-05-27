@@ -220,6 +220,4 @@ def test_KS_ESN_no_FT_Nr_100():
                  truenorm3=22.746095729149104)
 
 if __name__=='__main__':
-    test_KS_ESN_with_FT_Nr_100()
     test_KS_ESN_with_FT_Nr_400()
-    test_KS_ESN_no_FT_Nr_100()

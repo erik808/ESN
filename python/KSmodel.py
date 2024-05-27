@@ -41,6 +41,8 @@ class KSmodel:
 
         self.initialized = False
 
+        self.I = sparse.eye(self.N, format='csr')
+
     def initialize(self):
         self.computeMatrices()
         self.initialized = True
@@ -127,8 +129,7 @@ class KSmodel:
 
     def H(self, y, dt):
         """ time dependent Jacobian (backward Euler) """
-        out = (sparse.eye(self.N, format='csr') -
-               dt * self.J(y))
+        out =  self.I - dt * self.J(y)
         return out
 
     def  step(self, y, dt, frc=0, verbosity=0):
