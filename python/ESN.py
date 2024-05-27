@@ -451,9 +451,10 @@ class ESN:
         u = u.squeeze()
 
         pre = self.W @ state + self.W_in @ u + self.W_ofb @ y + self.bias
-        
-        return (self.alpha * self.f(pre) + (1 - self.alpha) * state + 
-                self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5))
+        act = (self.alpha * self.f(pre) + (1 - self.alpha) * state +
+               self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5))
+        # return activation
+        return act
 
     def apply(self, state, u):
         state = state.squeeze()
@@ -508,8 +509,8 @@ class ESN:
             print('ESN scaling: minMaxAll [-1,1]')
 
         elif self.scalingType == 'standardize':
-            self.scaleU = 1.0 / np.std(U, axis=0)
-            self.scaleY = 1.0 / np.std(Y, axis=0)
+            self.scaleU = 1.0 / np.std(U, axis=0, ddof=1)
+            self.scaleY = 1.0 / np.std(Y, axis=0, ddof=1)
             self.shiftU = np.mean(U, axis=0)
             self.shiftY = np.mean(Y, axis=0)
             print('ESN scaling: standardize')
