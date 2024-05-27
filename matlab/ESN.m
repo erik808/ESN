@@ -55,6 +55,7 @@ classdef ESN < handle
         scalingType (1,1) string = 'none';
 
         X (:,:) double {mustBeNumeric} % reservoir state activations
+        extX (:,:) double {mustBeNumeric} % reservoir state activations
 
         % for fitting take the square of the even components, this fixes
         % issues with symmetry
@@ -404,6 +405,8 @@ classdef ESN < handle
             if self.centerY
                 trainY = trainY - mean(trainY);
             end
+
+            self.extX = extX
 
             time = tic;
             fprintf('ESN fitting W_out...\n')

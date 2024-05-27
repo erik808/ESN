@@ -110,11 +110,16 @@ def test_KSmodel_transient():
 
 
 
-def _test_KS_ESN(feedThrough=True):
+def _test_KS_ESN(feedThrough,
+                 Nr,
+                 truenorm1,
+                 truenorm2,
+                 truenorm3):
     ks_prf, ks_imp = _standard_KS_setup()
     data = sio.loadmat('../matlab/testdata_KS.mat')
 
     X = data['X']
+    N = X.shape[0]
     Phi = data['Phi']
     NT = data['NT']
     dt = data['dt'][0][0]
@@ -137,15 +142,15 @@ def _test_KS_ESN(feedThrough=True):
     # ESNc settings:
     esn_pars = {}
     esn_pars['scalingType']        = 'standardize'
-    esn_pars['Nr']                 = 100
+    esn_pars['Nr']                 = Nr
     esn_pars['rhoMax']             = 0.4
     esn_pars['alpha']              = 1.0
-    esn_pars['Wconstruction']      = 'avgDegree'
-    esn_pars['avgDegree']          = 3
+    esn_pars['Wconstruction']      = 'entriesPerRow'
+    esn_pars['entriesPerRow']      = 3
     esn_pars['tikhonov_lambda']    = 1e-10
     esn_pars['bias']               = 0.0
     esn_pars['squaredStates']      = 'even'
-    esn_pars['reservoirStateInit'] = 'random'
+    esn_pars['reservoirStateInit'] = 'zero'
     esn_pars['inputMatrixType']    = 'balancedSparse'
     esn_pars['inAmplitude']        = 1.0
     esn_pars['waveletBlockSize']   = 1.0
@@ -169,7 +174,10 @@ def _test_KS_ESN(feedThrough=True):
 
     Npred = len(test_range)
     predY = np.zeros((Npred, N))
-    esn_state = esn.X[-1,:]
+    esn_state = esn.X[-1,:].copy()
+    testnorm1 = np.linalg.norm(esn_state)
+    assert testnorm1 == pytest.approx(truenorm1, abs=1e-6)
+
     for i in range(Npred):
         Pyk, Nk = ks_imp.step(yk, dt)
         if feedThrough:
@@ -177,15 +185,41 @@ def _test_KS_ESN(feedThrough=True):
         else:
             u_in = yk.squeeze()
 
-    u_in      = np.expand_dims(u_in, axis=0)
-    u_in      = esn.scaleInput(u_in)
-    esn_state = esn.update(esn_state, u_in)
-    u_out     = esn.apply(esn_state, u_in)
-    u_out     = np.expand_dims(u_out, axis=0)
-    yk        = esn.unscaleOutput(u_out)
-    predY[i,:] = yk
+        u_in      = np.expand_dims(u_in, axis=0)
+        u_in      = esn.scaleInput(u_in)
+        esn_state = esn.update(esn_state, u_in)
+        u_out     = esn.apply(esn_state, u_in)
+        u_out     = np.expand_dims(u_out, axis=0)
+        yk        = esn.unscaleOutput(u_out)
+        predY[i,:] = yk
 
-    breakpoint()
+    testnorm2 = np.linalg.norm(predY[0,:])
+    assert testnorm2 == pytest.approx(truenorm2, abs=1e-6)
+    testnorm3 = np.linalg.norm(predY[-1,:])
+    assert testnorm2 == pytest.approx(truenorm2, abs=1e-6)
+
+def test_KS_ESN_with_FT_Nr_100():
+    _test_KS_ESN(feedThrough=True,
+                 Nr=100,
+                 truenorm1=3.965632205052407,
+                 truenorm2=9.706998182570420,
+                 truenorm3=10.403893120577992)
+
+def test_KS_ESN_with_FT_Nr_400():
+    _test_KS_ESN(feedThrough=True,
+                 Nr=400,
+                 truenorm1=7.673198562464222,
+                 truenorm2=9.708102339288049,
+                 truenorm3=9.710065385954087)
+
+def test_KS_ESN_no_FT_Nr_100():
+    _test_KS_ESN(feedThrough=False,
+                 Nr=100,
+                 truenorm1=3.978325899932794,
+                 truenorm2=9.760411337060200,
+                 truenorm3=22.746095729149104)
 
 if __name__=='__main__':
-    _test_KS_ESN()
+    test_KS_ESN_with_FT_Nr_100()
+    test_KS_ESN_with_FT_Nr_400()
+    test_KS_ESN_no_FT_Nr_100()

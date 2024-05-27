@@ -21,7 +21,7 @@ test_range=2101:2500;
 generate_data = false;
 
 % use feedthrough connection
-with_FT = true;
+with_FT = false;
 
 if generate_data
     fprintf('Generate time series... \n');
@@ -97,7 +97,7 @@ yk = X(:, init_idx);
 Npred = numel(test_range);
 predY = zeros(Npred, N);
 esn_state = esn.X(end,:);
-return
+
 for i = 1:Npred
     [Pyk, Nk] = ks_imp.step(yk, dt);
     if with_FT
@@ -112,7 +112,6 @@ for i = 1:Npred
     yk        = esn.unscaleOutput(u_out)';
     predY(i,:) = yk;
 end
-
 
 figure(1)
 imagesc(predY)

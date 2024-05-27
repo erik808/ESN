@@ -345,18 +345,20 @@ class ESN:
         for k in range(1, T):
             X[k, :] = self.update(X[k-1, :], trainU[k, :], trainY[k-1, :])
 
-        self.X = X
+        self.X = X.copy()
         print('ESN iterate state over %d samples... done (%fs)' %
               (T, time.time() - tstart))
 
         tstart = time.time()
         print('ESN fitting W_out...')
 
-        extX = self.X
+        extX = X.copy()
         if self.squaredStates == 'append':
+            raise Exception('this should be tested first')
             extX = np.append(self.X, self.X * self.X)
         elif self.squaredStates == 'even':
-            extX[:, 1:2:] = extX[:, 1:2:] * extX[:, 1:2:]
+            even_inds = range(1,self.Nr,2)
+            extX[:, even_inds] = X[:, even_inds]**2
 
         if self.feedThrough:
             if self.ftRange is None:
@@ -392,6 +394,7 @@ class ESN:
             H = sparse.eye(T)
 
             if self.waveletReduction > 1 and self.waveletBlockSize > 1:
+                # THIS IS NOT TESTED against matlab code
                 # create wavelet block
                 W = self.haarmat(self.waveletBlockSize)
 
@@ -446,6 +449,8 @@ class ESN:
         '''Update the reservoir state'''
         if y is None:
             y = np.zeros(self.Ny)
+        else:
+            y = y.squeeze()
 
         state = state.squeeze()
         u = u.squeeze()
@@ -458,12 +463,14 @@ class ESN:
 
     def apply(self, state, u):
         state = state.squeeze()
-        x = state
-        u = u.squeeze()
+        x = state.copy()
+        u = u.copy().squeeze()
         if self.squaredStates == 'append':
+            raise Exception('this should be tested first')
             x = np.append(state, state**2)
         elif self.squaredStates == 'even':
-            x[1:2:] = state[1:2:]**2
+            even_inds = range(1,self.Nr,2)
+            x[even_inds] = state[even_inds]**2
 
         if self.feedThrough:
             x = np.append(self.ftAmp*u[self.ftRange], self.resAmp*x)
