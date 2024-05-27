@@ -65,12 +65,12 @@ esn_pars.scalingType        = 'standardize';
 esn_pars.Nr                 = 100;
 esn_pars.rhoMax             = 0.4;
 esn_pars.alpha              = 1.0;
-esn_pars.Wconstruction      = 'avgDegree';
-esn_pars.avgDegree          = 3;
+esn_pars.Wconstruction      = 'entriesPerRow';
+esn_pars.entriesPerRow      = 3;
 esn_pars.lambda             = 1e-10;
 esn_pars.bias               = 0.0;
 esn_pars.squaredStates      = 'even';
-esn_pars.reservoirStateInit = 'random';
+esn_pars.reservoirStateInit = 'zero';
 esn_pars.inputMatrixType    = 'balancedSparse';
 esn_pars.inAmplitude        = 1.0;
 esn_pars.waveletBlockSize   = 1.0;
@@ -97,6 +97,7 @@ yk = X(:, init_idx);
 Npred = numel(test_range);
 predY = zeros(Npred, N);
 esn_state = esn.X(end,:);
+return
 for i = 1:Npred
     [Pyk, Nk] = ks_imp.step(yk, dt);
     if with_FT
