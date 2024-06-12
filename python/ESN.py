@@ -29,6 +29,11 @@ class ESN:
         # average degree of the graph W
         self.avgDegree = 3
 
+        # The ESN can be tricked into doing pure DMD by using the
+        # feedthrough and disabling the ESN dynamics. Enable this with
+        # the dmdMode flag.
+        self.dmdMode = False
+
         # Wconstruction, entriesPerRow option: avg number of entries per row
         self.entriesPerRow = 10
 
@@ -342,8 +347,17 @@ class ESN:
         tstart = time.time()
 
         # Iterate the state, save all neuron activations in X
-        for k in range(1, T):
-            X[k, :] = self.update(X[k-1, :], trainU[k, :], trainY[k-1, :])
+        if self.dmdMode:
+            assert self.feedThrough == True, ("In DMD mode, feedthrough"
+                                              " should be activated.")
+            # DMD mode: disable ESN dynamics
+            X = []
+        else:
+            # Normal ESN behaviour: iterate the state, save all neuron
+            # activations in X
+            for k in range(1, T):
+                X[k, :] = self.update(X[k-1, :], trainU[k, :], trainY[k-1, :])
+
 
         self.X = X.copy()
         print('ESN iterate state over %d samples... done (%fs)' %
@@ -455,13 +469,27 @@ class ESN:
         state = state.squeeze()
         u = u.squeeze()
 
-        pre = self.W @ state + self.W_in @ u + self.W_ofb @ y + self.bias
-        act = (self.alpha * self.f(pre) + (1 - self.alpha) * state +
-               self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5))
-        # return activation
-        return act
+        # DMD mode behaviour
+        if self.dmdMode:
+            return u
+        else: # Ordinary behaviour
+            pre = self.W @ state + self.W_in @ u + self.W_ofb @ y + self.bias
+            act = (self.alpha * self.f(pre) + (1 - self.alpha) * state +
+                   self.noiseAmplitude * (np.random.rand(self.Nr) - 0.5))
+            # return activation
+            return act
 
     def apply(self, state, u):
+
+        # DMD mode behaviour
+        if (self.dmdMode and
+            self.feedThrough):
+            assert len(self.ftRange) > 0, ("In DMD mode, feedthrough should"
+                                           " have a meaningful ftRange.")
+            x = self.ftAmp*u[self.ftRange]
+            return self.f_out(self.W_out @ x)
+
+        # Ordinary behaviour
         state = state.squeeze()
         x = state.copy()
         u = u.copy().squeeze()
