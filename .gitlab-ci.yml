@@ -1,3 +1,5 @@
+image: er-harbor.smhi.se/foluft/python:3.9-build-gdal34-rh8
+
 stages:    
     - test
 
