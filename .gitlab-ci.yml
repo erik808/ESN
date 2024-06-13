@@ -1,10 +1,8 @@
+image: er-harbor.smhi.se/tfolinux/rh9@sha256:ad1f03fbb4331d6d39638292352fd938a4db436f26bb28c67f0d817453054fe4
 
 stages:    
     - test
 
-variables:
-  MEMORY: 1G
-  
 pytest:
   stage: test
 
