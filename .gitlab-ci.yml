@@ -1,9 +1,10 @@
-variables:
-  memory_limit: 1536Mi
-  
+
 stages:    
     - test
 
+variables:
+  MEMORY: 1G
+  
 pytest:
   stage: test
 
