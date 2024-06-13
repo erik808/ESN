@@ -1,3 +1,5 @@
+image: er-harbor.smhi.se/tfolinux/rh9-mini:latest
+
 stages:    
     - test
 
