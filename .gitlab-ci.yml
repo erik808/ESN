@@ -1,5 +1,6 @@
-image: er-harbor.smhi.se/tfolinux/rh9-mini:latest
-
+variables:
+  memory_limit: 1536Mi
+  
 stages:    
     - test
 
