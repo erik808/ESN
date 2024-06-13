@@ -1,5 +1,3 @@
-image: er-harbor.smhi.se/tfolinux/rh9@sha256:ccfd95aac336e6a036acec14825e554992cb0ad60d559634377df30989e25e74
-
 stages:    
     - test
 
