@@ -7,24 +7,33 @@
    - [X] So feed a few critical members with deterministic arrays and
      compare with matlab or octave output for the related member in
      matlab.
-*** DONE test minMax1 
+*** DONE test minMax1
 *** DONE test minMax2
 *** DONE test minMaxAll
 *** DONE test standardize
-    
+
 ** DONE [#B] setup continuous integration
    - [X] either in the gitlab repo
 
-** TODO [#A] KS test
+** DONE [#A] KS test
    To test all capabilities in the paper we need to use KS. Not QG
    that would be overkill.
-   
-*** TODO Port KSmodel to python
-*** TODO With the same seed test predictions
-    - [ ] with esn pars from the paper
-    - [ ] with and without feedthrough
-    - [ ] with and without squared states (nonlinear output layer)
+
+*** DONE Port KSmodel to python
+*** DONE With the same seed test predictions
+    - [X] with esn pars from the paper
+    - [X] with and without feedthrough
+    - [X] with and without squared states (nonlinear output layer)
+
 
 ** TODO [#C] integrate with pytorch
    - [ ] let this implementation be a cell
    - [ ] implement other cells, like GRU, LSTM
+
+** TODO [#C] rename and restructure this project
+   Because DMD and simple linear corrections are also easily computed
+   with the same code (that includes regularization).
+
+** TODO [#C] improve performance
+   Especially the sparse matrix generation in KS are a
+   bottleneck. Maybe this stuff should be C code.

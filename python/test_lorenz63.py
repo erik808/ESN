@@ -6,7 +6,7 @@ from importlib import reload
 import asciichartpy as acp
 
 reload(ESN)
-from ESN import ESN
+from ESN.ESN import ESN
 
 def create_data(dt, init, dataPoints):
     '''Create Lorenz '63 data.

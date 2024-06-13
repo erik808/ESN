@@ -9,7 +9,7 @@ from importlib import reload
 reload(ESN)
 reload(KSmodel)
 
-from ESN import ESN
+from ESN.ESN import ESN
 from KSmodel import KSmodel
 
 def _standard_KS_setup():
@@ -139,22 +139,15 @@ def _test_KS_ESN(feedThrough,
     testU  = U[:, test_range].T
     testY  = Y[:, test_range].T
 
-    # ESNc settings:
+    # Non-default ESNc settings:
     esn_pars = {}
     esn_pars['scalingType']        = 'standardize'
     esn_pars['Nr']                 = Nr
     esn_pars['rhoMax']             = 0.4
-    esn_pars['alpha']              = 1.0
-    esn_pars['Wconstruction']      = 'entriesPerRow'
     esn_pars['entriesPerRow']      = 3
     esn_pars['tikhonov_lambda']    = 1e-10
-    esn_pars['bias']               = 0.0
     esn_pars['squaredStates']      = 'even'
-    esn_pars['reservoirStateInit'] = 'zero'
     esn_pars['inputMatrixType']    = 'balancedSparse'
-    esn_pars['inAmplitude']        = 1.0
-    esn_pars['waveletBlockSize']   = 1.0
-    esn_pars['waveletReduction']   = 1.0
     esn_pars['feedThrough']        = feedThrough
     esn_pars['ftRange']            = range(N, 2*N)
     esn_pars['fCutoff']            = 0.1
@@ -164,7 +157,6 @@ def _test_KS_ESN(feedThrough,
     esn.setPars(esn_pars)
     esn.initialize()
     esn.train(trainU, trainY)
-
 
     # Prediction
     # initialization index
@@ -219,5 +211,101 @@ def test_KS_ESN_no_FT_Nr_100():
                  truenorm2=9.760411337060200,
                  truenorm3=22.746095729149104)
 
+def _test_KS_DMD(feedThrough,
+                 truenorm1,
+                 truenorm2):
+    ks_prf, ks_imp = _standard_KS_setup()
+    data = sio.loadmat('../matlab/testdata_KS.mat')
+
+    X = data['X']
+    N = X.shape[0]
+    Phi = data['Phi']
+    NT = data['NT']
+    dt = data['dt'][0][0]
+    train_range=range(99,2100)
+    test_range=range(2100,2500)
+
+    # input data
+    # restricted truths and imperfect predictions
+    if feedThrough:
+        U = np.vstack((X[:,:-1], Phi[:,:-1]))
+    else:
+        U = X[:,:-1]
+
+    Y = X[:, 1:] # perfect predictions
+    trainU = U[:, train_range].T
+    trainY = Y[:, train_range].T
+    testU  = U[:, test_range].T
+    testY  = Y[:, test_range].T
+
+    # ESNc settings:
+    esn_pars = {}
+    esn_pars['scalingType']     = 'standardize'
+    esn_pars['tikhonov_lambda'] = 1e-10
+    esn_pars['fCutoff']         = 0.1
+
+    # DMD mode edits:
+    esn_pars['dmdMode']     = True
+    esn_pars['feedThrough'] = True
+
+    # For DMD mode the ESN feedThrough is always enabled. The
+    # feedthrough flag here is for an additional bypass that turns DMD
+    # into DMDc.
+    if feedThrough:
+        esn_pars['ftRange'] = range(0, 2*N)
+    else:
+        esn_pars['ftRange'] = range(0, N)
+
+    esn_pars['fCutoff'] = 0.1
+
+    np.random.seed(1)
+    esn = ESN(100, trainU.shape[1], trainY.shape[1])
+    esn.setPars(esn_pars)
+    esn.initialize()
+    esn.train(trainU, trainY)
+
+    # Prediction
+    # initialization index
+    init_idx = train_range[-1]+1
+    # initial state for the predictions
+    yk = X[:, init_idx]
+
+    Npred = len(test_range)
+    predY = np.zeros((Npred, N))
+    esn_state = esn.X[-1,:].copy()
+
+    for i in range(Npred):
+        Pyk, Nk = ks_imp.step(yk, dt)
+        if feedThrough:
+            u_in = np.append(yk.squeeze(), Pyk.squeeze())
+        else:
+            u_in = yk.squeeze()
+
+        u_in      = np.expand_dims(u_in, axis=0)
+        u_in      = esn.scaleInput(u_in)
+        esn_state = esn.update(esn_state, u_in)
+        u_out     = esn.apply(esn_state, u_in)
+        u_out     = np.expand_dims(u_out, axis=0)
+        yk        = esn.unscaleOutput(u_out)
+        predY[i,:] = yk
+
+
+    testnorm1 = np.linalg.norm(predY[0,:])
+    assert testnorm1 == pytest.approx(truenorm1, abs=1e-6)
+    testnorm2 = np.linalg.norm(predY[-1,:])
+    assert testnorm2 == pytest.approx(truenorm2, abs=1e-6)
+
+def test_KS_DMD_no_FT():
+    # Plain DMD
+    _test_KS_DMD(feedThrough=False,
+                 truenorm1=9.813685304169578,
+                 truenorm2=2.121733009135961)
+
+def test_KS_DMD_with_FT():
+    # DMD with control (DMDc)
+    _test_KS_DMD(feedThrough=True,
+                 truenorm1=9.705766805509354,
+                 truenorm2=9.123091252049004)
+
 if __name__=='__main__':
-    test_KS_ESN_with_FT_Nr_400()
+    test_KS_DMD_with_FT()

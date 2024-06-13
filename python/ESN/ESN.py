@@ -5,7 +5,6 @@ import scipy
 from scipy import sparse
 from scipy.sparse import linalg
 
-
 class ESN:
     '''ESN: an Echo State Network'''
 
@@ -350,14 +349,15 @@ class ESN:
         if self.dmdMode:
             assert self.feedThrough == True, ("In DMD mode, feedthrough"
                                               " should be activated.")
-            # DMD mode: disable ESN dynamics
-            X = []
+            # DMD mode: disable ESN dynamics, X empty
+            X = np.array([]).reshape(T,0)
         else:
             # Normal ESN behaviour: iterate the state, save all neuron
             # activations in X
             for k in range(1, T):
-                X[k, :] = self.update(X[k-1, :], trainU[k, :], trainY[k-1, :])
-
+                X[k, :] = self.update(X[k-1, :],
+                                      trainU[k, :],
+                                      trainY[k-1, :])
 
         self.X = X.copy()
         print('ESN iterate state over %d samples... done (%fs)' %
@@ -367,10 +367,13 @@ class ESN:
         print('ESN fitting W_out...')
 
         extX = X.copy()
-        if self.squaredStates == 'append':
+        if (self.squaredStates == 'append' and
+            not self.dmdMode):
             raise Exception('this should be tested first')
             extX = np.append(self.X, self.X * self.X)
-        elif self.squaredStates == 'even':
+
+        elif (self.squaredStates == 'even' and
+              not self.dmdMode):
             even_inds = range(1,self.Nr,2)
             extX[:, even_inds] = X[:, even_inds]**2
 
@@ -480,12 +483,12 @@ class ESN:
             return act
 
     def apply(self, state, u):
-
         # DMD mode behaviour
         if (self.dmdMode and
             self.feedThrough):
             assert len(self.ftRange) > 0, ("In DMD mode, feedthrough should"
                                            " have a meaningful ftRange.")
+            u = u.copy().squeeze()
             x = self.ftAmp*u[self.ftRange]
             return self.f_out(self.W_out @ x)
 

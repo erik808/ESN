@@ -21,7 +21,7 @@ test_range=2101:2500;
 generate_data = false;
 
 % use feedthrough connection
-with_FT = false;
+with_FT = true;
 
 if generate_data
     fprintf('Generate time series... \n');
@@ -75,9 +75,16 @@ esn_pars.inputMatrixType    = 'balancedSparse';
 esn_pars.inAmplitude        = 1.0;
 esn_pars.waveletBlockSize   = 1.0;
 esn_pars.waveletReduction   = 1.0;
-esn_pars.dmdMode            = false;
-esn_pars.feedThrough        = with_FT;
-esn_pars.ftRange            = N+1:2*N;
+% esn_pars.dmdMode            = false;
+% esn_pars.feedThrough        = with_FT;
+% esn_pars.ftRange            = N+1:2*N;
+esn_pars.dmdMode            = true;
+esn_pars.feedThrough        = true;
+if with_FT
+    esn_pars.ftRange        = 1:2*N;
+else
+    esn_pars.ftRange        = 1:N;
+end
 esn_pars.fCutoff            = 0.1;
 
 % seed
@@ -96,7 +103,14 @@ yk = X(:, init_idx);
 
 Npred = numel(test_range);
 predY = zeros(Npred, N);
-esn_state = esn.X(end,:);
+
+if ~isempty(esn.X)
+    esn_state = esn.X(end,:);
+else
+    esn_state = [];
+end
+
+disp(norm(esn_state))
 
 for i = 1:Npred
     [Pyk, Nk] = ks_imp.step(yk, dt);
@@ -112,6 +126,9 @@ for i = 1:Npred
     yk        = esn.unscaleOutput(u_out)';
     predY(i,:) = yk;
 end
+
+disp(norm(predY(1,:)))
+disp(norm(predY(end,:)))
 
 figure(1)
 imagesc(predY)
