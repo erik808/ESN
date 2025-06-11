@@ -1,4 +1,9 @@
-image: er-harbor.smhi.se/tfolinux/rh9
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
 
 stages:    
     - test
