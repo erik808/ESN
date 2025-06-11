@@ -1,15 +1,3 @@
-runners:
-  podSecurityContext:
-    runAsNonRoot: true
-
-  containers:
-    - name: build
-      image: your-image
-      securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-            - ALL
 stages:    
     - test
 
