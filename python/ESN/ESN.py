@@ -5,6 +5,7 @@ import scipy
 from scipy import sparse
 from scipy.sparse import linalg
 
+
 class ESN:
     '''ESN: an Echo State Network'''
 
@@ -26,18 +27,21 @@ class ESN:
         self.Wconstruction = 'entriesPerRow'
 
         # average degree of the graph W
+        # (Wconstruction = 'avgDegree')
         self.avgDegree = 3
+
+        # Wconstruction, entriesPerRow option: avg number of entries per row
+        # (Wconstruction = 'entriesPerRow')
+        self.entriesPerRow = 10
+
+        # Wconstruction, sparsity option: percentage of zeros
+        # (Wconstruction = 'sparsity')
+        self.sparsity = 0.95
 
         # The ESN can be tricked into doing pure DMD by using the
         # feedthrough and disabling the ESN dynamics. Enable this with
         # the dmdMode flag.
         self.dmdMode = False
-
-        # Wconstruction, entriesPerRow option: avg number of entries per row
-        self.entriesPerRow = 10
-
-        # Wconstruction, sparsity option: percentage of zeros
-        self.sparsity = 0.95
 
         # control noise
         self.noiseAmplitude = 0.0
@@ -120,6 +124,9 @@ class ESN:
         # control output feedback
         self.ofbAmplitude = 0.0
 
+        # keep a certain number of samples for training, lastmost keep_sampoles
+        self.keep_samples = None
+
         # set the method to solve the linear least squares problem to compute
         # W_out: 'TikhonovTSVD'
         #        'TikhonovNormalEquations
@@ -131,7 +138,7 @@ class ESN:
 
         # Filter cutoff: Tikhonov regularization dampens the singular
         # values which allows a cutoff at some point.
-        self.fCutoff = 1.0e-2;
+        self.fCutoff = 1.0e-2
 
         # tolerance for the pseudo inverse
         self.pinvTol = 1.0e-4
@@ -374,7 +381,7 @@ class ESN:
 
         elif (self.squaredStates == 'even' and
               not self.dmdMode):
-            even_inds = range(1,self.Nr,2)
+            even_inds = range(1, self.Nr, 2)
             extX[:, even_inds] = X[:, even_inds]**2
 
         if self.feedThrough:
@@ -386,6 +393,15 @@ class ESN:
 
         if self.centerX:
             extX = extX - np.mean(extX)
+
+        # keep only <keep_samples> for training
+        if (
+                self.keep_samples is not None and
+                self.keep_samples < extX.shape[0]
+        ):
+            sample_start = -np.min([self.keep_samples, extX.shape[0]])
+            extX = extX[sample_start:,]
+            trainY = trainY[sample_start:,]
 
         if self.centerY:
             trainY = trainY - np.mean(trainY)
